@@ -1,0 +1,54 @@
+# LUMORA Phase 1.A — local stack, $0. `docker compose up` and the app talks to pgvector.
+# Mirrors cloud (07 §5): pgvector here -> Supabase later; local fs assets -> R2 later.
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: lumora
+      POSTGRES_PASSWORD: lumora
+      POSTGRES_DB: lumora
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # migrations auto-run on first boot (alphabetical)
+      - ./db/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lumora -d lumora"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://lumora:lumora@db:5432/lumora
+      EMBEDDER: mock        # mock | bge-m3
+      GENERATOR: mock       # mock | real
+      SOURCE: mock
+      PUBLISHER: mock
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./assets:/app/assets   # mock assets on local fs (R2 later)
+
+  # ── Optional MinIO (S3-compatible) for asset storage. Phase 1.A uses local fs,
+  #    so this is commented out — uncomment to rehearse the R2 swap.
+  # minio:
+  #   image: minio/minio
+  #   command: server /data --console-address ":9001"
+  #   environment:
+  #     MINIO_ROOT_USER: lumora
+  #     MINIO_ROOT_PASSWORD: lumora123
+  #   ports:
+  #     - "9000:9000"
+  #     - "9001:9001"
+  #   volumes:
+  #     - miniodata:/data
+
+volumes:
+  pgdata:
+  # miniodata:

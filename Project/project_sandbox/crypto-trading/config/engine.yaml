@@ -1,0 +1,95 @@
+# Crypto Engine — Step 1 config (all tuning params live here, never hardcoded)
+# Defaults seeded from doc/03-signal-logic-spec.md (business/investment role).
+# Keep diffable; this is the single source of truth for v1 deterministic Step 1.
+
+engine_version: "0.1.0"
+
+universe:
+  symbols: ["BTCUSDT"]
+  timeframes: ["1h", "4h", "1d"]
+  # 1w also fetched for the weekly-close invalidation rule (spec §5.2 / open item 2)
+  extra_fetch_timeframes: ["1w"]
+  asset_class: "crypto"
+
+data:
+  exchange: "binance"
+  history_start: "2024-01-01"      # ingest-once-store-local
+  drop_unclosed_candle: true       # never store the in-progress candle (watermark)
+  fetch_limit: 1000                # Binance max candles per request
+
+# ---- feature params (deterministic layer) ----
+features:
+  ma:
+    periods: [20, 50, 100]
+    type: "ema"                    # ema | sma  (spec default ema)
+    anchor_tf: "1d"
+  rsi:
+    period: 14
+    oversold: 30                   # -> neutral (NOT long; knife-catch guard)
+    overbought: 70                 # -> short
+  atr:
+    period: 14
+  structure:
+    pivot_lookback: 3              # fractal: bars each side for confirmed pivot
+    swing_count: 4                 # last N confirmed pivots used
+    swing_atr_mult: 0.5            # min swing size = mult * ATR to count
+  candle:
+    tf: "1d"
+    context_atr: 0.5               # pattern must be within this ATR of a swing level
+    enabled: ["engulfing", "hammer", "shooting_star", "doji"]
+  vol_regime:
+    lookback: 100
+    expansion_mult: 1.5
+    contraction_mult: 0.7
+  price_dist:
+    stretch: 2.5                   # |close-MA20|/ATR beyond this = overextended
+  levels:
+    max_support: 3
+    max_resistance: 3
+    cluster_atr_mult: 0.5          # merge pivots within this ATR distance
+
+# ---- signals -> votes -> weights (sum-normalized over PRESENT signals) ----
+# vote in {long, short, neutral}. Per spec §2 (structure/MA primary).
+signals:
+  weights:
+    structure_1d: 0.22
+    structure_4h: 0.16
+    structure_1h: 0.06
+    ma_stack: 0.20
+    price_vs_ma_dist: 0.08
+    rsi_1d: 0.09
+    rsi_4h: 0.06
+    rsi_1h: 0.03
+    candle_pattern_1d: 0.10
+    vol_regime: 0.00              # context only, excluded from denominator
+    # elliott_1d: 0.05            # v2 — emitted only when LLM layer on
+  conviction:
+    medium_margin: 0.15          # margin < 0.15 -> low
+    high_margin: 0.35            # margin > 0.35 -> high
+
+# ---- confluence / confidence ----
+confidence:
+  floor: 0.45                    # below this -> playbook forced to stand-aside
+# macro/ETF flow > technical (§5/§8): confidence = max_score * factor[active]
+macro_regime:
+  active: "neutral"              # the one manual override knob in Step 1
+  aligned: 1.0
+  neutral: 0.85
+  conflicting: 0.65
+
+# ---- invalidation (levels.invalidation) ----
+invalidation:
+  atr_mult: 0.5                  # buffer beyond swing
+  confirm: "weekly_close"        # avoids intrabar stop-hunt fakeouts
+  min_atr_dist: 1.0             # floor: widen too-tight stops
+  expansion_widen: 1.3          # widen buffer when vol_regime == expansion
+
+# ---- elliott (v2 placement) ----
+elliott:
+  enabled: false                # v1 deterministic = null/absent
+  weight: 0.05
+
+# ---- output ----
+output:
+  dir: "output"
+  write_markdown: true

@@ -1,0 +1,12 @@
+# Pipeline Alert Policies
+alertPolicy:
+  displayName: "Data Pipeline Failures"
+  documentation:
+    content: "Alert when data pipeline jobs fail"
+  conditions:
+  - displayName: "Job failure rate"
+    conditionThreshold:
+      filter: 'resource.type="dataproc_cluster"'
+      comparison: "COMPARISON_GT"
+      thresholdValue: 0
+  enabled: true

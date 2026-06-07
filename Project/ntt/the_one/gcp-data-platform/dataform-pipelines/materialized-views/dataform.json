@@ -1,0 +1,6 @@
+{
+  "defaultSchema": "analysis",
+  "assertionSchema": "dataform_assertions",
+  "warehouse": "bigquery",
+  "defaultLocation": "US"
+}

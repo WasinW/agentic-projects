@@ -1,0 +1,14 @@
+# NOTE: pinned for Intel macOS (x86_64). PyTorch's last x86_64 macOS wheel is 2.2.2,
+# which requires numpy<2 and transformers<5. Do not bump torch on this machine.
+qdrant-client>=1.12.0
+torch==2.2.2
+numpy<2
+transformers==4.44.2
+sentence-transformers==3.0.1
+# MCP stack — pinned together; a partial/skewed install of these breaks the
+# server import (anyio AsyncBackend / pydantic_core CoreConfig errors).
+mcp==1.27.2
+anyio>=4.5
+pydantic>=2.13
+python-frontmatter>=1.1.0
+watchfiles>=0.24.0

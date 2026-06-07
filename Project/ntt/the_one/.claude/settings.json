@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(brew list:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/wasin/Documents/ntt_project/the_one/parttime-content/docs"
+    ]
+  }
+}

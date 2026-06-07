@@ -1,0 +1,10 @@
+# LUMORA Phase 1.A — minimal deps. Mock loop runs with just these.
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.1
+psycopg[binary]==3.2.3        # only used when DATABASE_URL is set (docker)
+# --- real-impl deps, NOT installed by default (keep image tiny / $0) ---
+# sentence-transformers   # EMBEDDER=bge-m3
+# anthropic               # GENERATOR=real caption
+# replicate               # GENERATOR=real image

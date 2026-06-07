@@ -1,0 +1,58 @@
+# ============================================================
+#  CLIENT CODE — never commit (concept/discussion docs live in Agent/)
+# ============================================================
+Project/ntt/the_one/realproject/
+realproject/
+
+# ============================================================
+#  Secrets / credentials (defense-in-depth; client secrets already excluded above)
+# ============================================================
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.p12
+*.pfx
+*.keytab
+*-key.json
+credentials*.json
+service-account*.json
+.git-credentials
+.npmrc
+.pypirc
+
+# Terraform state / vars (may contain secrets)
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform/
+
+# ============================================================
+#  Data files — not source (PDPA: may be real customer data)
+# ============================================================
+*.csv
+*.parquet
+*.tsv
+*.avro
+*.xlsx
+
+# ============================================================
+#  Local / regenerable infra
+# ============================================================
+.venv/
+venv/
+**/__pycache__/
+*.pyc
+*.egg-info/
+_infra/qdrant_storage/
+qdrant_storage/
+node_modules/
+
+# ============================================================
+#  OS / editor
+# ============================================================
+.DS_Store
+*.log
+.metals/
+.bsp/
