@@ -13,6 +13,7 @@ dependencies = [
     "pyyaml>=6.0",        # engine.yaml config
     "typer>=0.12",        # CLI: `analyze --symbol BTCUSDT --tf 1h,4h,1d`
     "rich>=13.7",         # pretty CLI output
+    "anthropic>=0.69",    # interpretive LLM layer (Elliott / summaries / plan)
 ]
 
 [project.optional-dependencies]

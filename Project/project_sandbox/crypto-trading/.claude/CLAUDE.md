@@ -13,10 +13,13 @@ The1/NTT/SCB. Do not apply a DE/pipeline lens.
 - **Engine = 2 layers:** deterministic (fetch/features/signals — exact, no LLM) +
   interpretive (LLM reads a digest → Elliott, summaries, plan). v1 = deterministic only.
 
-## Current state: v1 = deterministic Step 1
+## Current state: deterministic Step 1 + interpretive LLM layer
 input symbol+TF → fetch history (ccxt/Binance) → store local (Parquet + DuckDB) →
-compute features → emit JSON per **doc/02 §6 (LOCKED contract)**. elliott/summaries/
-plan = `null`. No LLM. Runs manual.
+compute features → emit JSON per **doc/02 §6 (LOCKED contract)**. Runs manual.
+- Default = deterministic only; elliott/summaries/plan = `null`, no API key needed.
+- `--interpret` → `interpret.py` calls Claude (Opus 4.8, adaptive thinking, structured
+  outputs) over the deterministic *digest* to fill elliott/summaries/plan and fold one
+  low-weight `elliott_1d` vote into confluence (ADR 0007/0008). Needs ANTHROPIC_API_KEY.
 
 ## Contract locks (also ADRs in KB)
 - `confluence_score[v] = Σ(weight where vote==v) / Σ(weights of PRESENT signals)`;
@@ -48,12 +51,21 @@ plan = `null`. No LLM. Runs manual.
 - existing: `adr` (log decisions). To create: `crypto-ta-math`, `risk-management`
   (later: `backtesting-discipline`, `pine-script-v6`).
 
+## Pine bridge (engine → TradingView)
+`pine.py::to_pine` emits a Pine v6 overlay (hard-coded S/R, invalidation, plan
+band/stop/targets, bias label) from a Step1Output. `analyze --pine` writes
+`output/*.pine` to paste into TV. Deterministic; plan band only with `--interpret`.
+Pine can't call back to the engine — re-run + re-paste to refresh (ADR 0009).
+
 ## Run (once deps installed)
 ```
 pip install -e ".[dev]"
-crypto-engine analyze --symbol BTCUSDT --tf 1h,4h,1d
+crypto-engine analyze --symbol BTCUSDT --tf 1h,4h,1d [--interpret] [--pine]
 pytest
 ```
+> venv must be python ≥3.11 (machine `python3` is 3.9). If `crypto-engine` ever
+> errors "No module named crypto_engine", re-run `uv pip install -e .` (uv editable
+> install occasionally needs re-registering).
 
 ## Guardrails
 - Not investment advice — this systematizes discipline, it is not a predictor.

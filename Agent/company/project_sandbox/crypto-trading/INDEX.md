@@ -22,11 +22,16 @@ crypto-trading/
 - Project context (source of truth): `…/crypto-trading/doc/02-project-context.md` (§6 = LOCKED output contract).
 - Signal logic spec: `…/crypto-trading/doc/03-signal-logic-spec.md`.
 
-## Build status (v1 deterministic Step 1 — COMPLETE)
-fetch (ccxt/Binance) → store (Parquet + DuckDB, watermark) → features
-(Wilder RSI/ATR, MA stack, fractal pivots, HH-HL/LH-LL, S/R, vol regime) →
-signals → confluence → bias/confidence → emit §6 JSON (elliott/summaries/plan=null).
-24 tests passing; runs manual via `crypto-engine analyze`.
+## Build status
+**Deterministic Step 1 — COMPLETE.** fetch (ccxt/Binance) → store (Parquet + DuckDB,
+watermark) → features (Wilder RSI/ATR, MA stack, fractal pivots, HH-HL/LH-LL, S/R, vol
+regime) → signals → confluence → bias/confidence → emit §6 JSON.
+**Interpretive LLM layer — COMPLETE.** `--interpret` runs Claude (Opus 4.8, adaptive
+thinking, structured outputs) over the deterministic digest → elliott/summaries/plan +
+folds one low-weight `elliott_1d` vote (ADR 0008).
+**Pine bridge — COMPLETE.** `--pine` emits a Pine v6 overlay (S/R, invalidation, plan
+band/stop/targets, bias label) to paste into TradingView (ADR 0009).
+30 tests passing; `crypto-engine analyze [--interpret] [--pine]`.
 
 ## Agents used
 solution-architect (sanity-check, GO-WITH-NOTES) · investment-consultant (signal

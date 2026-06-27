@@ -13,5 +13,7 @@ and `doc/03-signal-logic-spec.md`.
 | [0005](0005-confluence-formula-bias-derivation.md) | Confluence formula + bias/conviction/confidence | signals, scoring |
 | [0006](0006-macro-haircut-no-counter-trend.md) | Macro confidence haircut + no-counter-trend/stand-aside | signals, risk |
 | [0007](0007-elliott-wave-lowest-weight-supporting-view.md) | Elliott Wave = lowest weight, supporting view only | signals, elliott |
+| [0008](0008-interpretive-llm-layer.md) | Interpretive LLM layer (Elliott / summaries / plan) | llm, architecture |
+| [0009](0009-pine-bridge-levels-as-pine.md) | Pine bridge — levels-as-Pine (generated snippet) | pine, tradingview |
 
-Next number: 0008.
+Next number: 0010.

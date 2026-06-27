@@ -42,10 +42,21 @@ macro-regime knob) live in `config/engine.yaml`. See `doc/03-signal-logic-spec.m
 | `doc/03-signal-logic-spec.md` | Signal set, weights, confluence, playbook, invalidation |
 | `.claude/CLAUDE.md` | Working guidance for Claude Code sessions |
 
+## Interpretive layer (LLM)
+```bash
+export ANTHROPIC_API_KEY=...
+crypto-engine analyze --symbol BTCUSDT --interpret
+```
+`--interpret` runs Claude (Opus 4.8, adaptive thinking, structured outputs) over the
+deterministic *digest* (never raw candles) to fill `elliott` / `summaries` / `plan`,
+and folds a single low-weight `elliott_1d` vote into confluence (supporting view).
+
 ## Status
 - [x] P0 scaffold + §6 contract models
-- [ ] P1 data layer (ccxt → parquet/duckdb)
-- [ ] P2 features + golden tests
-- [ ] P3 signals + confluence + bias
-- [ ] P4 emit JSON/md + manual run
-- [ ] (later) LLM interpretive layer · Elliott · Pine bridge · dashboard
+- [x] P1 data layer (ccxt → parquet/duckdb)
+- [x] P2 features + golden tests
+- [x] P3 signals + confluence + bias
+- [x] P4 emit JSON/md + manual run
+- [x] LLM interpretive layer (Elliott · summaries · plan)
+- [x] Pine bridge (levels-as-Pine) — `analyze --pine` → `output/*.pine`
+- [ ] (later) dashboard · webhook action leg · predictive ML

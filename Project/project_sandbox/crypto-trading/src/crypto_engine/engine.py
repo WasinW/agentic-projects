@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 import pandas as pd
 
 from .config import EngineConfig, load_config
-from .contract import DataWindow, Levels, Meta, Regime, Step1Output
+from .contract import DataWindow, Levels, Meta, Regime, Signal, Step1Output
 from .data import backfill as B
 from .data import store as S
 from .features import indicators as I
@@ -32,7 +32,12 @@ def _now_iso() -> str:
 
 
 def analyze(
-    cfg: EngineConfig, symbol: str, refresh: bool = False, root: str = S.DEFAULT_ROOT
+    cfg: EngineConfig,
+    symbol: str,
+    refresh: bool = False,
+    root: str = S.DEFAULT_ROOT,
+    interpret: bool = False,
+    llm_client=None,
 ) -> Step1Output:
     if refresh:
         B.backfill_symbol(cfg, symbol, root=root)
@@ -95,37 +100,73 @@ def analyze(
     )
     signals = build_signals(inp, cfg)
     conf = C.derive(signals, structure_by_tf, tfs, cfg)
-
-    # ---- deterministic regime + invalidation ----
     structure_1d = structure_by_tf.get(anchor_tf, "mixed")
-    trend = D.derive_trend(ma_label, structure_1d)
-    invalidation = D.compute_invalidation(
-        conf.bias.direction, anchor_pivots, atr_last, close_last, vol_label, cfg
-    )
 
-    # ---- assemble §6 ----
-    return Step1Output(
-        meta=Meta(
-            symbol=symbol,
-            asset_class=cfg.universe.asset_class,
-            timeframes=tfs,
-            generated_at=_now_iso(),
-            data_window=DataWindow(**{"from": cfg.data.history_start, "to": _ms_to_date(int(adf["timestamp"].iloc[-1]))}),
-            engine_version=cfg.engine_version,
-        ),
-        regime=Regime(
-            trend=trend,
-            structure=D.structure_text(structure_1d),
-            note=D.regime_note(ma_label, ma_vals, rsi_by_tf.get(anchor_tf), fcfg.rsi.oversold, fcfg.rsi.overbought),
-        ),
-        bias=conf.bias,
-        levels=Levels(support=support, resistance=resistance, invalidation=invalidation),
-        signals=signals,
-        confluence_score=conf.score,
-        confidence=conf.confidence,
-        caveats=conf.caveats,
-        elliott=None, summaries=None, plan=None,  # interpretive (LLM) — null in v1
-    )
+    def _invalidation(direction: str):
+        return D.compute_invalidation(direction, anchor_pivots, atr_last, close_last, vol_label, cfg)
+
+    def _assemble(conf_, signals_, elliott=None, summaries=None, plan=None) -> Step1Output:
+        return Step1Output(
+            meta=Meta(
+                symbol=symbol, asset_class=cfg.universe.asset_class, timeframes=tfs,
+                generated_at=_now_iso(),
+                data_window=DataWindow(**{"from": cfg.data.history_start, "to": _ms_to_date(int(adf["timestamp"].iloc[-1]))}),
+                engine_version=cfg.engine_version,
+            ),
+            regime=Regime(
+                trend=D.derive_trend(ma_label, structure_1d),
+                structure=D.structure_text(structure_1d),
+                note=D.regime_note(ma_label, ma_vals, rsi_by_tf.get(anchor_tf), fcfg.rsi.oversold, fcfg.rsi.overbought),
+            ),
+            bias=conf_.bias,
+            levels=Levels(support=support, resistance=resistance, invalidation=_invalidation(conf_.bias.direction)),
+            signals=signals_, confluence_score=conf_.score, confidence=conf_.confidence, caveats=conf_.caveats,
+            elliott=elliott, summaries=summaries, plan=plan,
+        )
+
+    out = _assemble(conf, signals)  # deterministic (elliott/summaries/plan = null)
+    if not interpret:
+        return out
+
+    # ---- interpretive LLM layer (Step 1.5) ----
+    from . import interpret as I_
+
+    def _recent(kind: str, n: int = 3) -> list[float]:
+        return [round(p.price, 2) for p in anchor_pivots if p.kind == kind][-n:]
+
+    digest = {
+        "meta": out.meta.model_dump(by_alias=True),
+        "regime": out.regime.model_dump(),
+        "bias": out.bias.model_dump(),
+        "confluence_score": out.confluence_score.model_dump(),
+        "confidence": out.confidence,
+        "levels": out.levels.model_dump(),
+        "signals": [s.model_dump() for s in out.signals],
+        "per_timeframe": {
+            tf: {
+                "rsi": round(rsi_by_tf[tf], 2),
+                "structure": structure_by_tf[tf],
+                "last_close": round(float(candles[tf]["close"].iloc[-1]), 2),
+            }
+            for tf in tfs
+        },
+        "anchor_tf": anchor_tf,
+        "ma_values": {k: round(v, 2) for k, v in ma_vals.items() if v == v},
+        "atr": round(atr_last, 2),
+        "vol_regime": vol_label,
+        "recent_swing_highs_1d": _recent("high"),
+        "recent_swing_lows_1d": _recent("low"),
+        "caveats": out.caveats,
+    }
+
+    res = I_.interpret(out, digest, cfg, client=llm_client)
+
+    # fold the single Elliott signal into confluence (ADR 0007 — low weight, supporting view)
+    if cfg.elliott.weight and "elliott_1d" not in {s.name for s in signals}:
+        signals = [*signals, Signal(name="elliott_1d", value=res.elliott_value, vote=res.elliott_vote, weight=cfg.elliott.weight)]
+        conf = C.derive(signals, structure_by_tf, tfs, cfg)
+
+    return _assemble(conf, signals, elliott=res.elliott, summaries=res.summaries, plan=res.plan)
 
 
 def analyze_default(symbol: str = "BTCUSDT", config_path: str = "config/engine.yaml", refresh: bool = False) -> Step1Output:

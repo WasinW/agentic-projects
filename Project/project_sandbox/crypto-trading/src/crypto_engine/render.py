@@ -33,7 +33,27 @@ def to_markdown(o: Step1Output) -> str:
         "## Caveats",
     ]
     lines += [f"- {c}" for c in o.caveats]
+
+    if o.plan is not None:
+        p = o.plan
+        lines += [
+            "", "## Plan (LLM)",
+            f"- playbook: **{p.playbook}**",
+            f"- entry {p.entry_zone} · stop {p.stop} · targets {p.targets} · R:R {p.r_r}",
+            f"- sizing: {p.sizing_note}",
+            f"- note: {p.note}",
+        ]
+    if o.summaries is not None:
+        s = o.summaries
+        lines += ["", "## Summaries (LLM)",
+                  f"- **daily**: {s.daily}", f"- **weekly**: {s.weekly}", f"- **monthly**: {s.monthly}"]
+    if o.elliott is not None and o.elliott.tf_1d is not None:
+        e = o.elliott.tf_1d
+        lines += ["", "## Elliott 1d (LLM — supporting view)",
+                  f"- {e.current_wave} · {e.structure} → {e.implied_direction} (conf {e.confidence})",
+                  f"- primary: {e.primary_count}", f"- alt: {e.alt_count}"]
+
     interp = [k for k, v in (("elliott", o.elliott), ("summaries", o.summaries), ("plan", o.plan)) if v is None]
     if interp:
-        lines += ["", f"> interpretive blocks null (v1 deterministic): {', '.join(interp)}"]
+        lines += ["", f"> interpretive blocks null (deterministic only): {', '.join(interp)}"]
     return "\n".join(lines) + "\n"
