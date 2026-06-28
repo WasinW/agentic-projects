@@ -49,7 +49,7 @@ If ~/Documents/Projects/Agent/company/project_sandbox/{project_folder}/ doesn't 
 ## Step 4 — Rules of engagement
 
 - This is a project-focused session. Don't pull in work from other projects.
-- Use existing subagents in ~/.claude/agents/ (36 across architect/engineer/business/consultant/ops/design). Don't create new ones unless there's a clear skill gap.
+- Use existing subagents in ~/.claude/agents/ (33 across architect/engineer/consultant/ops/business/design — the COMMON consulting layer mirrored in Agent/roles/). They serve ALL projects, not just these 6. Don't create new ones unless there's a clear skill gap.
 - If my instruction conflicts with a locked decision in the master doc, FLAG IT before acting. Don't silently override.
 - Mode for this project (apply consistently):
   • Lumora / Library Framework → builder + business strategist mindset, not DE/pipeline.
@@ -67,35 +67,38 @@ Begin with Step 1.
 
 Each project has slightly different routing. Add these notes to the prompt if useful:
 
+> Subagent names below are real `subagent_type` values (all COMMON, in ~/.claude/agents).
+> Skills tagged **[specific]** live in the project's own `skills/`; the rest are common (in ~/.claude/skills).
+
 ### Lumora
-- Subagents to lean on: `business/strategy`, `business/marketing`, `engineer/software`, `design/content`
-- Skills likely needed: `content-taxonomy`, `multi-account-ops`, `creator-analytics`
+- Subagents to lean on: `content-strategist`, `marketing-consultant`, `software-engineer`, `ai-engineer`, `enterprise-architect` (strategy)
+- Skills: `lumora-*` (combo-recommend/content-batch/trend-scan/art-prompt/saymu-oracle) **[specific, exist]**
 - Watch out: don't draw it as SaaS, it's agency/MCN.
 
 ### Library Framework
-- Subagents: `architect/solution`, `business/strategy`, `design/content`
-- Skills likely needed: `content-taxonomy`, `prompt-library`, `agent-workflow-design`
+- Subagents: `solution-architect`, `content-strategist`, `enterprise-architect`, `business-analyst`
+- Skills: `content-taxonomy` **[specific, to create]**, `agent-workflow-design` (common, to create)
 - Key question to revisit early: is this a separate product or internal IP?
 
 ### Crypto Trading Engine
-- Subagents: `architect/solution` (one-time), `engineer/software` (lead), `engineer/data-analyst`, `business/investment`
-- Skills to create: `crypto-ta-math`, `risk-management`
-- Later phase: `engineer/ml`, `engineer/frontend`, `design/ui`, `design/ux`
+- Subagents: `solution-architect` (one-time), `software-engineer` (lead), `data-analyst`, `investment-consultant`
+- Skills: `crypto-ta-math`, `risk-management` **[specific, exist]**
+- Later phase: `ml-engineer`, `frontend-engineer`, `ui-designer`, `ux-designer`
 - Critical: NOT a data-engineering project. NOT a product. Personal builder tool.
 
 ### NeurX
-- Subagents: `architect/solution`, `engineer/software`, `business/strategy`, `consultant/market`
-- Skills likely needed: `agent-protocol-design`, `mcp-integration`, `agent-registry-patterns`
+- Subagents: `ai-architect`, `platform-architect`, `ai-engineer`, `solution-architect`, `enterprise-architect`, `security-engineer`
+- Skills: `agent-registry-patterns` **[specific, to create]**; `agent-protocol-design`, `mcp-integration` (common, to create)
 - Critical: agent-centric, not model-centric. Old vision is dead.
 
 ### Regent AI
-- Subagents: `architect/solution`, `business/compliance` (if exists, else `consultant/legal`), `engineer/software`
-- Skills likely needed: `agent-policy-engine`, `audit-trail-design`, `ai-regulation-knowledge` (PDPA, EU AI Act, etc.)
+- Subagents: `governance-consultant`, `security-engineer`, `ai-architect`, `ai-engineer`, `solution-architect`
+- Skills: `agent-policy-engine`, `audit-trail-design` **[specific, to create]**; `ai-regulation-knowledge` (common, to create); `dpia-assessment` (common, exists)
 - Critical: agent autonomy & liability, not model explainability.
 
 ### SentientNet
-- Subagents: `architect/solution`, `business/strategy`, `consultant/market`
-- Skills likely needed: `decentralized-systems`, `agent-federation`, `sovereignty-frameworks`
+- Subagents: `blockchain-architect`, `blockchain-consultant`, `enterprise-architect`, `ai-architect`, `governance-consultant`
+- Skills: `decentralized-systems`, `agent-federation`, `sovereignty-frameworks` **[specific, later]**
 - Critical: this is vision-stage. Don't try to build, try to clarify position + roadmap.
 
 ---

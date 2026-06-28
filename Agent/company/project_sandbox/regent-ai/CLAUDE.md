@@ -18,16 +18,19 @@ NOT model explainability/ethics — that space is crowded and the vision is dead
 - Market pull = EU AI Act in force, US EOs, Singapore AI Verify, Thailand drafting.
 - OPEN: generic vs vertical (finance/health) · SaaS vs open-core · separate product vs NeurX layer.
 
-## Agent routing (reuse from ~/.claude/agents, don't create)
-**Common core:** solution-architect · software-engineer · business-analyst · investment-consultant.
-**Specific:** governance-consultant (PDPA, EU AI Act, BoT/SEC, model governance) ·
-security-engineer (policy enforcement, audit, guardrails, zero-trust) ·
-ai-architect (safety + evaluation infrastructure) · ai-engineer (guardrails —
-NeMo / Llama Guard, eval — RAGAS/DeepEval).
+## Agents to consult — all COMMON (live in `roles/` + `~/.claude/agents`, shared by every project)
+Lead: governance-consultant (PDPA, EU AI Act, BoT/SEC, model governance) ·
+security-engineer (policy enforcement, audit, guardrails, zero-trust).
+Support: ai-architect (safety + eval infra) · ai-engineer (guardrails — NeMo/Llama Guard,
+eval — RAGAS/DeepEval) · solution-architect · software-engineer · business-analyst · investment-consultant.
+> NOT this project's agents — shared consulting layer. Don't copy them here.
 
-## Skills
-Reuse: `dpia-assessment` (already exists — PDPA/GDPR DPIA). To create:
-`agent-policy-engine`, `audit-trail-design`, `ai-regulation-knowledge` (PDPA + EU AI Act).
+## This project's own assets (SPECIFIC — live in this folder)
+- **Specific skills** (core IP) → `skills/`: `agent-policy-engine`, `audit-trail-design`
+  (the policy engine + provenance/audit IS Regent's product).
+- **Common skills** (in `~/.claude/skills`, reusable): `ai-regulation-knowledge`
+  (PDPA + EU AI Act — to create); `dpia-assessment` (already exists).
+- **Knowledge** → `knowledge/`: regulation notes, policy/audit patterns, HITL thresholds.
 
 ## Conventions
 - Compliance claims must cite the actual regulation; don't hand-wave "best practice".

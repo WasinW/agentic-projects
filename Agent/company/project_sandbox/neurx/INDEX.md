@@ -20,14 +20,13 @@ neurx/
 Vision/architecture stage. Old "AI model marketplace" vision deprecated. Gated
 behind Lumora Phase-1 revenue before serious build time.
 
-## Agents — common + specific
-| Tier | Agents |
-|---|---|
-| Common core | solution-architect, software-engineer, business-analyst, investment-consultant |
-| Specific | ai-architect, platform-architect, ai-engineer, devops-engineer, enterprise-architect, security-engineer |
+## Agents — all COMMON (consulted from `roles/`, none owned by this project)
+Lead: ai-architect, platform-architect, ai-engineer.
+Support: solution-architect, software-engineer, business-analyst, investment-consultant, devops-engineer, enterprise-architect, security-engineer.
 
 ## Skills
-To create: `agent-protocol-design`, `agent-registry-patterns`, `mcp-integration`.
+- **Specific** (core IP, → `skills/`): `agent-registry-patterns` ✅ created (mirrored to ~/.claude/skills).
+- **Common** (in `~/.claude/skills`, reusable, to create): `agent-protocol-design`, `mcp-integration`.
 
 ## Knowledge to capture
 MCP + A2A protocol landscape · agent registry/versioning patterns · observability

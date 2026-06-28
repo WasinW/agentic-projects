@@ -482,6 +482,16 @@ Refs: [Anthropic computer use tool docs](https://platform.claude.com/docs/en/age
 
 Refs: [MCP spec 2025-06-18](https://modelcontextprotocol.io/specification/2025-06-18/changelog), [MCP transports](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports).
 
+### Agent-to-Agent (A2A) — the other half of interop
+
+**What.** Where MCP connects an agent to **tools**, A2A connects an agent to **other agents**. Open protocol from Google (Apr 2025), donated to the **Linux Foundation** (project Jun 2025, **v1.0 in 2026**, 150+ orgs, integrated across Google/Microsoft/AWS). Agents advertise an **Agent Card** (JSON: capabilities, endpoint, auth) for discovery, then exchange **tasks** with a defined lifecycle (submitted → working → input-required → completed/failed) over JSON-RPC/HTTP, with streaming + push notifications for long-running work.
+
+**When to use.** Multi-vendor or cross-org agent collaboration where you don't control both sides. *Don't* reach for it inside a single system you own — orchestrate in-process (LangGraph) and keep A2A for the trust boundary. Mnemonic: **MCP for tools, A2A for teammates** — and an A2A agent typically uses MCP internally.
+
+**Security.** Same untrusted-peer posture as MCP, one layer up: capability spoofing in Agent Cards, task-injection between agents, confused-deputy across vendors. Bind identity per agent, scope auth per task, log the provenance chain.
+
+**Tools.** a2a-sdk (Python/JS), Agent Card discovery; complements MCP registries (official MCP registry, Smithery, mcp.so). Refs: [A2A project (Linux Foundation)](https://a2a-protocol.org/), [A2A on GitHub](https://github.com/a2aproject).
+
 ### Semantic caching (correctness trade-offs)
 
 **What.** Cache LLM responses keyed by **embedding similarity** of the query, not exact-string match: embed the incoming query, vector-search past queries, and if cosine similarity ≥ threshold, return the cached answer — skipping the LLM call. Big latency + cost win for FAQ-shaped traffic.

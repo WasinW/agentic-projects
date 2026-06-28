@@ -18,17 +18,18 @@ customer. Builder + product-strategist lens — NOT DE/pipeline, NOT a SaaS yet.
 - Channel Count Formula: `MIN(S,A) ≤ N ≤ S×A` (S=subject breadth, A=audience segments).
 - OPEN: separate product or pure internal IP for Lumora? Ask before assuming.
 
-## Agent routing (reuse from ~/.claude/agents, don't create)
-**Common core:** solution-architect (system design) · software-engineer (build) ·
-business-analyst (requirements/stories) · investment-consultant (productize-or-not case).
-**Specific:** content-strategist (taxonomy = content strategy) · ai-engineer
-(the agent/workflow that *runs* the framework) · ux-designer (framework usability) ·
-platform-architect (only if productized as a licensable platform).
+## Agents to consult — all COMMON (live in `roles/` + `~/.claude/agents`, shared by every project)
+Lead: solution-architect · software-engineer · content-strategist (taxonomy = content strategy).
+Support: business-analyst (requirements/stories) · investment-consultant (productize-or-not case) ·
+ai-engineer (the agent/workflow that *runs* the framework) · ux-designer (usability) ·
+platform-architect (only if productized as a license).
+> These are NOT this project's agents — they're the shared consulting layer. Don't copy them here.
 
-## Skills
-Reuse Lumora's: `lumora-combo-recommend`, `lumora-content-batch` (these already
-operationalize C×T×M). To create: `content-taxonomy` (axis definitions + validation),
-`agent-workflow-design`. All live in `~/.claude/skills`.
+## This project's own assets (SPECIFIC — live in this folder)
+- **Specific skill** (niche IP) → `skills/`: `content-taxonomy` (C×T×M axis defs + validation).
+- **Reuse**: `lumora-combo-recommend`, `lumora-content-batch` (already operationalize C×T×M);
+  `agent-workflow-design` (a COMMON skill in `~/.claude/skills`).
+- **Knowledge** → `knowledge/`: axis defs, account-level tags, channel-count formula.
 
 ## Conventions
 - Keep framework definitions tool-agnostic; Lumora-specific bindings stay in Lumora KB.

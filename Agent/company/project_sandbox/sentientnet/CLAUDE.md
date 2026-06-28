@@ -18,17 +18,18 @@ This is VISION-STAGE: clarify position + roadmap, don't try to build.
 - Requires Track A profitable AND NeurX + Regent established first. Phase 3+.
 - OPEN: crypto rails yes/no/eventually · gov vs enterprise vs consumer · 3/5/10-yr timeline.
 
-## Agent routing (reuse from ~/.claude/agents, don't create)
-**Common core:** solution-architect · business-analyst · investment-consultant.
-**Specific:** blockchain-architect (chain/micropayment/decentralized design — honest
-about when blockchain is NOT warranted) · blockchain-consultant (tokenomics,
-regulation, business-fit, sovereignty value vs hype) · enterprise-architect (sovereign
-+ ASEAN-scale deployment) · ai-architect (federated agent learning) ·
-governance-consultant (cross-border data sovereignty).
-> Note: keep software-engineer light here — it's clarify-position stage, not build.
+## Agents to consult — all COMMON (live in `roles/` + `~/.claude/agents`, shared by every project)
+Lead: blockchain-architect (chain/micropayment/decentralized design — honest about when
+blockchain is NOT warranted) · blockchain-consultant (tokenomics, regulation, business-fit,
+sovereignty vs hype) · enterprise-architect (sovereign + ASEAN-scale).
+Support: ai-architect (federated agent learning) · governance-consultant (cross-border data
+sovereignty) · solution-architect · business-analyst · investment-consultant.
+> NOT this project's agents — shared consulting layer. Keep software-engineer out: clarify-position stage, not build.
 
-## Skills
-To create (later): `decentralized-systems`, `agent-federation`, `sovereignty-frameworks`.
+## This project's own assets (SPECIFIC — live in this folder)
+- **Specific skills** (later, vision-stage IP) → `skills/`: `decentralized-systems`,
+  `agent-federation`, `sovereignty-frameworks`. Promote to common only if another project starts using them.
+- **Knowledge** → `knowledge/`: decentralized-AI landscape, sovereignty framing, roadmap.
 
 ## Conventions
 - Default to skepticism on crypto rails — invoke blockchain-consultant's "does it even

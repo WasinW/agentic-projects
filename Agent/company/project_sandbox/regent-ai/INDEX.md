@@ -20,15 +20,13 @@ regent-ai/
 Vision/architecture stage. Old "model explainability + AI ethics" vision deprecated.
 Relates to NeurX as governance layer (separate-product-vs-layer is open).
 
-## Agents — common + specific
-| Tier | Agents |
-|---|---|
-| Common core | solution-architect, software-engineer, business-analyst, investment-consultant |
-| Specific | governance-consultant, security-engineer, ai-architect, ai-engineer |
+## Agents — all COMMON (consulted from `roles/`, none owned by this project)
+Lead: governance-consultant, security-engineer.
+Support: ai-architect, ai-engineer, solution-architect, software-engineer, business-analyst, investment-consultant.
 
 ## Skills
-- Reuse: `dpia-assessment`.
-- To create: `agent-policy-engine`, `audit-trail-design`, `ai-regulation-knowledge`.
+- **Specific** (core IP, → `skills/`): `agent-policy-engine`, `audit-trail-design` ✅ created (mirrored to ~/.claude/skills).
+- **Common** (in `~/.claude/skills`, reusable): `ai-regulation-knowledge` (to create); `dpia-assessment` (exists).
 
 ## Knowledge to capture
 EU AI Act · Thailand AI draft + PDPA · Singapore AI Verify · audit-trail / provenance

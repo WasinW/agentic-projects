@@ -272,6 +272,23 @@ Most production agents use short-term + summarized conversational. Long-term is 
 
 Frameworks: LangGraph (most flexible), CrewAI (role-based), AutoGen (conversation-based).
 
+### Agent interoperability: MCP vs A2A
+
+Two complementary standards at different layers — don't conflate them:
+
+| | **MCP** (Model Context Protocol) | **A2A** (Agent2Agent) |
+|---|---|---|
+| Layer | agent ↔ **tools / data** (vertical) | agent ↔ **agent** (horizontal) |
+| Origin | Anthropic, Nov 2024 | Google → Linux Foundation project (Jun 2025), v1.0 in 2026 |
+| Unit | tool / resource / prompt | a **task** with a defined lifecycle, exchanged between peers |
+| Discovery | server registries (official MCP registry, Smithery, mcp.so) | **Agent Cards** — capabilities + endpoint + auth, fetched at discovery |
+| Reach for it when | give one agent more capabilities | let independent agents (different vendors/frameworks) collaborate |
+
+- **They stack**: an A2A agent usually uses MCP internally for its own tools and exposes an Agent Card to peers. Mnemonic: *MCP for tools, A2A for teammates.*
+- **A2A status (2026)**: v1.0 under Linux Foundation, 150+ orgs, integrated across Google/Microsoft/AWS, production use in supply-chain/finance/insurance/IT-ops; multi-tenancy + modern auth landed. Safe to build on.
+- **Design rule**: cross-org / multi-vendor agent systems → make the boundary A2A (Agent Cards + task lifecycle), not bespoke APIs. Single-system internal agents → orchestrate in-process (LangGraph); reach for A2A only at a trust/org boundary.
+- **Security**: Agent Cards + cross-agent task delegation widen the surface (capability spoofing, task-injection between agents, confused-deputy across vendors). Bind identity per agent, scope auth per task, log the provenance chain (which agent asked what of whom). Mirrors MCP's untrusted-server posture, one layer up.
+
 ---
 
 ## 4. Tools Landscape (2026)
@@ -329,6 +346,7 @@ Frameworks: LangGraph (most flexible), CrewAI (role-based), AutoGen (conversatio
 - **AutoGen** — conversational agents
 - **Anthropic Claude SDK with tool use** — direct API
 - **smolagents** (Hugging Face) — minimal
+- **Interop / discovery**: A2A SDKs (Agent Cards); MCP registries — official MCP registry (Anthropic/GitHub/Microsoft, ~9k+ servers), Smithery, mcp.so, PulseMCP
 
 ### Safety / Guardrails
 - **NeMo Guardrails** — NVIDIA, programmable
@@ -457,7 +475,8 @@ Emerging regulations (EU AI Act, US executive orders, sector-specific):
 
 ### Standards / specs
 - **OpenAI / Anthropic API docs** — patterns referenced industry-wide
-- **MCP (Model Context Protocol)** — Anthropic standard for tool use
+- **MCP (Model Context Protocol)** — Anthropic standard for tool use (agent ↔ tools)
+- **A2A (Agent2Agent)** — Linux Foundation standard for agent ↔ agent collaboration (Agent Cards + task lifecycle)
 - **OpenTelemetry GenAI semantic conventions** — for tracing
 
 ### Communities

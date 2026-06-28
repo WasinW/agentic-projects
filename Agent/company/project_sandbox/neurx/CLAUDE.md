@@ -16,16 +16,20 @@ agentic era. Track B (vision). NOT a model marketplace — that vision is dead.
 - Lumora = potential customer-zero; Library Framework workflows could ship here.
 - OPEN: open-core+hosting vs closed SaaS · global vs Thai/SEA · solo vs raise. Ask, don't assume.
 
-## Agent routing (reuse from ~/.claude/agents, don't create)
-**Common core:** solution-architect · software-engineer · business-analyst · investment-consultant.
-**Specific:** ai-architect (agentic platform arch) · platform-architect (platform-as-product:
-registry, golden paths, multi-tenancy) · ai-engineer (MCP/A2A, agent runtime) ·
+## Agents to consult — all COMMON (live in `roles/` + `~/.claude/agents`, shared by every project)
+Lead: ai-architect (agentic platform arch) · platform-architect (platform-as-product:
+registry, golden paths, multi-tenancy) · ai-engineer (MCP/A2A, agent runtime).
+Support: solution-architect · software-engineer · business-analyst · investment-consultant ·
 devops-engineer (serverless hosting) · enterprise-architect (positioning) ·
-security-engineer (multi-tenant runtime isolation).
+security-engineer (multi-tenant isolation).
+> NOT this project's agents — shared consulting layer. Don't copy them here.
 
-## Skills
-To create: `agent-protocol-design` (MCP/A2A), `agent-registry-patterns`,
-`mcp-integration`. All live in `~/.claude/skills`.
+## This project's own assets (SPECIFIC — live in this folder)
+- **Specific skill** (this project's core IP) → `skills/`: `agent-registry-patterns`
+  (publish/discover/version — the registry IS NeurX's product).
+- **Common skills** (in `~/.claude/skills`, reusable by any AI project, to create):
+  `agent-protocol-design` (MCP/A2A), `mcp-integration`.
+- **Knowledge** → `knowledge/`: protocol landscape, competitor map, positioning.
 
 ## Conventions
 - This is architecture + positioning stage. Clarify the wedge before any build.

@@ -20,14 +20,13 @@ sentientnet/
 Vision-stage only. Old crypto/Web3/DAO framing deprecated → reframed as sovereignty.
 Gated behind Track A profit + NeurX + Regent. Clarify position, don't build.
 
-## Agents — common + specific
-| Tier | Agents |
-|---|---|
-| Common core | solution-architect, business-analyst, investment-consultant |
-| Specific | blockchain-architect, blockchain-consultant, enterprise-architect, ai-architect, governance-consultant |
+## Agents — all COMMON (consulted from `roles/`, none owned by this project)
+Lead: blockchain-architect, blockchain-consultant, enterprise-architect.
+Support: ai-architect, governance-consultant, solution-architect, business-analyst, investment-consultant.
 
 ## Skills
-To create (later): `decentralized-systems`, `agent-federation`, `sovereignty-frameworks`.
+- **Specific** (vision-stage IP, → `skills/`, later): `decentralized-systems`, `agent-federation`, `sovereignty-frameworks`.
+- Promote any to common only if another project starts reusing it.
 
 ## Knowledge to capture
 Decentralized-AI landscape (Bittensor, Gensyn, Akash, Render, Ritual — none own

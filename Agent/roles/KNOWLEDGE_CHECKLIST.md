@@ -108,7 +108,9 @@ Use one of the **prompts** at the bottom of this file. Claude will:
 | Fairness / bias metrics | ml-engineer, governance-consultant | ✅ Covered | 2026-05-30 | Definitions + disparate-impact detection |
 | Compound AI systems | ai-architect, ai-engineer | ✅ Covered | 2026-05-30 | Berkeley 2024 framework, multi-model routing |
 | Computer-use / browser agents | ai-engineer, ai-architect | ✅ Covered | 2026-05-31 | Capability + use cases named; underexplored |
-| Model Context Protocol (MCP) | ai-engineer, ai-architect | ✅ Covered | 2026-05-31 | Mentioned in standards; not integrated into core patterns |
+| Model Context Protocol (MCP) | ai-engineer, ai-architect | ✅ Covered | 2026-06-27 | Deep section in ai-engineer (build/consume/security); MCP-vs-A2A table in ai-architect |
+| Agent-to-Agent (A2A) interop protocol | ai-architect, ai-engineer | ✅ Covered | 2026-06-27 | LF v1.0 2026; Agent Cards + task lifecycle; MCP-vs-A2A table + hands-on section + security |
+| Agent registry / discovery patterns | ai-architect | ⚠️ Partial | 2026-06-27 | Tools landscape lists MCP registries; deep publish/version/curation patterns live in neurx project KB (product-specific) |
 | Semantic caching (correctness trade-offs) | ai-engineer | ✅ Covered | 2026-05-31 | Mentioned for cost; correctness trade-offs shallow |
 
 ### Category: Architecture + Design
