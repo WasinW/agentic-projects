@@ -1,0 +1,42 @@
+---
+name: aia-new-job
+description: "Wasin's new job — Senior DE at AIA (insurance), AWS+Airflow+Databricks+Spark; prep scaffolded in data-ml-ai-pipeline, will dup to company/aia later"
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: edc98ef4-6330-4163-9d48-dc0918ebaaad
+---
+
+Wasin started as **Senior Data Engineer at AIA** (life-insurance company) on **2026-07-01**. See [[the1-role-and-job-change]].
+
+**Stack (CORRECTED 2026-07-01 after day-1):** **AZURE, not AWS.** Azure Databricks (ADB) + Azure Data Factory + ADLS + Azure SQL/Synapse + AKS + Azure Container Registry + PowerBI. This ALIGNS with his SCB experience (Azure Databricks + ADF) — big advantage. Orchestration = ADF (+ Integration Runtime). NOTE: earlier AWS/Airflow assumption was wrong — the prepped skills (framed AWS/MSK/MWAA) need reframing to Azure (Event Hubs?/Kafka-on-AKS, ADF, ADLS).
+
+**His actual role = the EVENT PROCESSING / Kafka side** (not the ADB consumer side he expected). Flow: sources → event-processing producers → **Kafka running on AKS** → Kafka topic → ADB Structured Streaming consumes → tables. He feels weak on the Kafka-on-Kubernetes infra and asked to be taught architecture/build/run/deploy.
+- **3 known repos (all YAML-heavy):** `dtp_kafka_build_ci` (CI/CD — build images to ACR + deploy manifests to AKS), `dtp_kafka_cluster` (the Kafka cluster definition), `dtp_kafka_connector` (Kafka Connect connectors). "dtp" likely = Data Platform.
+- **CONFIRMED (git screenshots 2026-07-01): Strimzi operator on AKS.** Evidence: `version/*/strimzi-kafka-operator` (0.20→0.46), `install/{cluster,topic,user}-operator` + `drain-cleaner` manifests, `Crd-kafkatopic/kafkauser`, `strimzi-kafka-bridge`. **CI = Jenkins** (not Azure DevOps), images → **ACR** (prod/non-prod promote). **Producers = Debezium CDC** connectors (Oracle/SQLServer/Postgres 1.9.7.Final) → topics. Custom Connect image = base + `my-plugins` + `TimestampConsumer` jar + kubernetes-config-provider. Monitoring = Grafana + Strimzi Kafka Exporter. Custom TLS/DNS certs. Namespaces `<code>-<env>-cluster` (e.g. `651563-kbdev-cluster`). Platform branded **"Kafka MFEC"** (MFEC = the SI that built it).
+- **STRICT policy:** cannot export code/data. He'll share screenshots only. Teach from architecture + give him a self-check checklist to read the YAML himself.
+- Teaching docs written under `data-ml-ai-pipeline/aia/`: `event-processing-kafka-aks.md` (architecture + confirmed §0 + connector §8), `repo-navigation-and-deployment.md` (confusion-buster: AKS=managed infra not code, how to find "live/main" in the messy env×version folders, deploy = Jenkins→ACR→AKS→operator reconcile).
+- **Agent created** (starter, NOT globally registered — kept in sandbox while role settles): `data-ml-ai-pipeline/agents/aia-de.md`. To activate later: copy to `~/.claude/agents/`.
+- Key teaching point that unblocked him: **AKS = managed Kubernetes infrastructure; Kafka is created declaratively** (apply `Kafka` CR → Strimzi operator builds broker pods) — there is no imperative "install kafka" script; YAML = desired state, operator = the engine. His scope ≈ **owning the Debezium CDC connectors** (onboard tables via `table.include.list`, promote dev→uat→prod+dr, carry through Strimzi version migrations e.g. 0.45→0.49.1; active "sf360 migration").
+- Still unseen: the `Kafka` cluster CR internals (brokers/KRaft/storage). Org on Bitbucket = `aia-th`.
+- **CONFIRMED 2026-07-02: topics are AUTO-CREATED** (no `kind: KafkaTopic` instance files in the cluster repo — only the `04-Crd-kafkatopic.yaml` CRD). Debezium/broker creates each topic at runtime on first write; name = `<database.server.name>.<schema>.<table>`; settings = broker defaults (num.partitions/default.replication.factor). Implication: adding a table (`table.include.list`) needs NO topic creation — topic appears automatically. Per-topic tuning would require an explicit `KafkaTopic` CR (they don't use them). Also relevant: the **Jenkinsfile is in the repo/Bitbucket (readable now)**; only the Jenkins **server UI** needs access he doesn't have yet.
+
+**⚠️ AIA ACTUAL scope vs GENERIC research — DO NOT CONFLATE (corrected 2026-07-02):** At AIA, Sin focuses ONLY on the **data-platform / producer side**. AIA CONFIRMED-real = Debezium→Kafka (Strimzi on AKS, his job) → **ADB (Azure Databricks)** consumes (Spark) → outbound *maybe* **Azure Synapse**, *maybe* one **ODS** (unclear who consumes downstream). Tooling = **ADB + Jenkins + Bitbucket** only. **NOT confirmed at AIA** (these are GENERIC possibility-space in the `data-ml-ai-pipeline` surveys, NOT AIA reality): online features, feature store, model serving, embeddings/Vector Search, RAG (Mosaic AI), agents (Genie/Agent FW). The survey/skill "reference stack → AIA (Azure-Databricks)" column = the *generic Azure-Databricks path IF one extended into AI*, NOT AIA's stack. The 3-part `de-solution-architecture` survey = aspirational research; keep it SEPARATE from AIA's narrow real job. Don't attribute survey AI content to AIA.
+
+**Refinements from a mobile Claude session (2026-07-02, exported to `knowledge_chat/aia-kafka-mobile-session-export-20260702.md`):**
+- **Name:** he is **วศิน** — address as **สิน / ศิน / sin** (NO trailing 's'; "Sin's" = possessive, don't use as his name).
+- **His 2 long-term goals:** (1) be able to **stand up Kafka ingestion (producer/CDC side) for a new source end-to-end by himself**; (2) **refactor the existing platform to make it simpler** (needs to fully understand current setup first). Consumer/Databricks side = already his strength, not the focus.
+- **Sharper architecture: 3 SEPARATE clusters on one AKS** — (a) Strimzi **operator** (1 pod, control plane), (b) **Kafka broker** cluster (`kind: Kafka`, StatefulSet + PVC, data plane), (c) **Kafka Connect** cluster (`kind: KafkaConnect`, Deployment, stateless). **Debezium = JAR plugins loaded inside the Connect image — NOT a separate pod and NOT on the broker cluster.** `KafkaConnector` CR just instantiates a connector on the Connect runtime.
+- **Strimzi = 4 operators** (in `install/<ver>/`): Cluster (manages Kafka/KafkaConnect/Bridge/MM2/Rebalance), Topic (`KafkaTopic`), User (`KafkaUser` + ACLs + Secret), Drain-Cleaner (webhook, safe eviction). Core = **reconciliation loop** (observe desired CR → compare actual → act → repeat). Topic+User often bundled as the "entity-operator" deployment.
+- **Deep-dive backlog he wants next (VS Code):** Debezium internals (LogMiner/snapshot/offset), KafkaConnect runtime mechanics, connector-YAML anatomy field-by-field (Oracle + SQL Server), CRD mechanics, a `kubectl` cheat-sheet for DE, operator-pattern deep, a "build a new Kafka cluster" checklist (= his Goal #1). New open Qs: kubectl read-access first? dev/sandbox cluster to practice? is `KafkaConnect` runtime CR in `connect/`?
+- **Policy reminder (why so strict):** traditional insurer, fears data leak + liability ("AI ไม่รับผิดชอบ, ต้องมี user คุม") — unlike The-1 (new platform, more open). Reason from architecture/screenshots only; never ask him to paste code or generate "AIA code".
+
+**Prep location (2026-06-30):** kept in `Agent/company/project_sandbox/data-ml-ai-pipeline/` for now; will **dup to `Agent/company/aia/`** once requirements are known (he'll say when to switch). Layering convention: `knowledge/` = curated specific knowledge; `knowledge_chat/` = raw web-chat exports (moved there to avoid mixing). See [[agent-common-vs-specific-layering]].
+
+**What's prepared:**
+- `knowledge/` — curated: 00-INDEX, architecture-modern-data-ai, **streaming-batch-patterns** (PRIMARY, Databricks/Delta framing), ai-rag-agent-reference (secondary). Re-framed GCP→AWS/Databricks.
+- `aia/first-week-questions.md` — day-1 questions (architecture, migrate/cost angle, scope, practices, insurance/OIC-PDPA, access) + his transferable skills.
+- `skills/` — 3 starter skills: `databricks-streaming-pattern`, `databricks-cost-optimization`, `airflow-databricks-orchestration` (all "starter — refine after requirements"; defer Spark tuning to existing `spark-tune`).
+- `aia/agent-draft.md` — draft `aia-senior-de` subagent (not registered globally yet).
+
+**Transferable from past roles (for CV/framing):** SCB config/metadata-driven ETL FW on Databricks+Spark ([[scb-datalake-rdt-framework]]); The-1 streaming Dataflow ops + e2e gitlab→tf→pipeline→mart. Insurance regulatory lens ~ his BOT reporting experience (OIC/PDPA equivalent).
