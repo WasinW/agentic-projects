@@ -1,0 +1,15 @@
+#!/bin/bash
+# Auto-embed staged Agent knowledge into Qdrant on commit (best-effort — NEVER blocks the commit).
+# Installed as: ln -sfn ../../Agent/_infra/hooks/pre-commit .git/hooks/pre-commit
+REPO="$(git rev-parse --show-toplevel)"
+files=$(git diff --cached --name-only --diff-filter=ACMR -- 'Agent/**/*.md' 'Agent/*.md' \
+  | grep -vE '(^|/)(_[^/]+|archive|knowledge_base_legacy|memory|bak_mem)/' || true)
+[ -z "$files" ] && exit 0
+if curl -s -m 2 http://localhost:6333/healthz >/dev/null 2>&1; then
+  # xargs (not shell word-split) — zsh/space-safe
+  echo "$files" | (cd "$REPO" && xargs "$REPO/Agent/_infra/reindex.sh" --files) \
+    || echo "[pre-commit] embed failed — doctor will flag drift; run reindex.sh later"
+else
+  echo "[pre-commit] qdrant down — skipped embed (doctor will flag drift)"
+fi
+exit 0

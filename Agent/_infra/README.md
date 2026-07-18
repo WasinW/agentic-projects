@@ -38,8 +38,8 @@ uv pip install -p .venv/bin/python -r requirements.txt
 
 ## Daily use
 
-The MCP server is launched automatically by Claude Code (configured in
-`~/.claude/settings.json`). You don't start `mcp_server.py` by hand.
+The MCP server is launched automatically by Claude Code (configured under
+`mcpServers` in `~/.claude.json` — NOT settings.json). You don't start `mcp_server.py` by hand.
 
 Tools exposed to Claude / subagents:
 
@@ -88,9 +88,9 @@ print(QdrantClient(host='localhost',port=6333).get_collection('agent_knowledge')
 | Symptom | Fix |
 |---|---|
 | `Cannot connect to Qdrant` | `docker compose up -d` |
-| MCP server not visible in Claude | Restart VS Code; check `~/.claude/settings.json` |
+| MCP server not visible in Claude | Restart VS Code; check `mcpServers` in `~/.claude.json` |
 | Search returns empty | `./reindex.sh --reset` |
-| `no module named 'mcp'` | Use the venv python in settings.json |
+| `no module named 'mcp'` | Use the venv python in the `~/.claude.json` mcpServers entry |
 
 ```bash
 docker logs agent-qdrant -f                                       # Qdrant logs

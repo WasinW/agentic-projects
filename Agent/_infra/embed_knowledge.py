@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """Index agent knowledge files into Qdrant.
 
-Run manually:   python embed_knowledge.py
-Or with arg:    python embed_knowledge.py --reset    (wipe collection first)
+Run via wrapper:  _infra/reindex.sh [--reset | --files A.md B.md]
+Auto-invoked by the git pre-commit hook (_infra/hooks/pre-commit) for staged Agent/**/*.md.
+Health check: _infra/doctor.sh (SessionStart hook).
+
+Exclusion rule: any path part starting with "_" is machine-excluded (_archive, _inbox,
+_template, _infra, _reviews) plus the names in SKIP_DIRS.
 """
 from __future__ import annotations
 
@@ -30,8 +34,13 @@ VECTOR_DIM = 1024
 QDRANT_HOST = "localhost"
 QDRANT_PORT = 6333
 
-# Folders to skip
-SKIP_DIRS = {".git", "node_modules", "_infra", "qdrant_storage"}
+# Folders to skip (any "_"-prefixed path part is also skipped — see is_skipped)
+SKIP_DIRS = {".git", "node_modules", "qdrant_storage", "archive", "knowledge_base_legacy", "memory", "bak_mem"}
+
+
+def is_skipped(parts: tuple[str, ...]) -> bool:
+    """Machine-exclusion rule: named skip dirs + any _-prefixed dir/file."""
+    return any(part in SKIP_DIRS or part.startswith("_") for part in parts)
 # Heuristic: chunks shouldn't exceed this many chars
 MAX_CHUNK_CHARS = 1500
 CHUNK_OVERLAP = 200
@@ -162,7 +171,7 @@ def main() -> int:
             except ValueError:
                 print(f"  skip (outside Agent root): {raw}")
                 continue
-            if any(part in SKIP_DIRS for part in rel_parts) or p.suffix != ".md":
+            if is_skipped(rel_parts) or p.suffix != ".md":
                 continue
             if p.exists():
                 targets.append(p)
@@ -170,7 +179,7 @@ def main() -> int:
         targets = [
             md
             for md in sorted(ROOT.rglob("*.md"))
-            if not any(part in SKIP_DIRS for part in md.relative_to(ROOT).parts)
+            if not is_skipped(md.relative_to(ROOT).parts)
         ]
 
     if not targets:
