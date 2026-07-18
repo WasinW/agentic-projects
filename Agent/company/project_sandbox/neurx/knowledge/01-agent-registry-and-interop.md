@@ -1,5 +1,11 @@
 # NeurX — Agent Registry & Interop (landscape + design notes)
 
+> **FROZEN 2026-07-18 — assume stale; re-scan before trusting any positioning.**
+> NeurX was KILLED as a standalone registry on 2026-07-18 (see `adr-0001-kill-as-registry-2026-07-18.md`).
+> The landscape below rots fast: AAIF/Linux Foundation registry consolidation, A2A v1.2 signed AgentCards,
+> and hyperscaler marketplaces have already moved past this snapshot. Trust/provenance IP merged into Regent.
+> Do NOT plan a registry from this file; treat every "the lane is open" claim as false until re-verified.
+
 > Project-specific knowledge. **Common** interop background (MCP vs A2A) lives in
 > `roles/technical/architect/ai-architect` + `…/engineer/ai-engineer` — consult those
 > first, don't duplicate. This file = the registry/product-specific depth.

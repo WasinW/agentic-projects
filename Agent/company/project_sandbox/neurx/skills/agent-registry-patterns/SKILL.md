@@ -5,6 +5,11 @@ description: Design patterns for an AGENT registry (NeurX) — publish flow, Age
 
 # agent-registry-patterns
 
+> **FROZEN 2026-07-18 — NeurX killed as a registry (see `neurx/knowledge/adr-0001-kill-as-registry-2026-07-18.md`).**
+> This skill is retained as a **design-reference artifact only**, NOT a product roadmap. Do not use it to plan
+> or build a NeurX registry. The one surviving primitive (trust/provenance) merged into Regent; any future
+> trust product is a fresh underwrite.
+
 NeurX-specific design reference. Common interop background (MCP vs A2A, Agent Cards,
 the registry landscape) lives in the ai-architect/ai-engineer roles KB +
 `neurx/knowledge/01-agent-registry-and-interop.md` — consult those first. This skill =

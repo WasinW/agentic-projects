@@ -1,104 +1,50 @@
 # Agent System — Top Index
 
-> The canonical directory of agent knowledge, project context, and orchestration.
-> When in doubt about where something lives, start here.
-
----
+> Updated 2026-07-18 (post-redesign). ACTIVE only — archived things live in `_archive/` (ดู `_archive/README.md`).
+> **Invariant:** tree นี้เป็น source of truth ทุกไฟล์; `~/.claude/{skills,agents}` = symlinks เท่านั้น (doctor เช็คทุก session)
 
 ## Layout
 
 ```
-~/Documents/Projects/Agent/
-├── INDEX.md                  ← this file
-├── company/                  ← Part 2: project-scoped context
-│   ├── INDEX.md
-│   ├── ntt/the_one/
-│   ├── scb/datax/
-│   └── new_company/
-├── roles/                    ← Part 3: role-based deep knowledge
-│   ├── INDEX.md
-│   ├── technical/
-│   │   ├── architect/
-│   │   ├── engineer/
-│   │   ├── consultant/
-│   │   └── ops/
-│   └── business/
-└── pipelines/                ← Part 4: orchestration playbooks
-    ├── INDEX.md
-    └── playbooks/
+Agent/
+├── INDEX.md · QUICKSTART.md
+├── roles/<cat>/<role>/{agent.md, knowledge.md}   ← fleet 21 agents (atomic pair)
+├── skills/                                       ← cross-project skills (10)
+├── company/
+│   ├── aia/          ← CURRENT engagement (knowledge/ + skills/ 9 + _inbox/)
+│   ├── _template/    ← copy เมื่อเริ่ม engagement ใหม่
+│   └── project_sandbox/   ← personal projects
+├── _infra/    ← RAG (Qdrant) + doctor.sh + reindex.sh + hooks/
+├── _archive/  ← cold storage (ntt, scb, retired roles/skills, pipelines)
+└── _reviews/  ← system reviews (agent-system-redesign-20260718.md)
 ```
 
-Subagents live separately in `~/.claude/agents/` (global, spawnable via Agent tool).
+## Agents (21) — spawn ตามชื่อ
 
----
+- **architect:** ai-architect, data-architect, platform-architect, solution-architect
+- **business:** analyst, content-strategist, finance-consultant
+- **consultant:** azure-expert, databricks-expert, governance-consultant, kafka-streaming-expert
+- **design:** ui-designer, ux-designer
+- **engineer:** ai-art-director, ai-engineer, data-analyst, de-engineer, devops-engineer, security-engineer, software-engineer
+- **ops:** data-ops
 
-## Quick links
+## Skills (29 invocable ผ่าน symlink)
 
-### Companies / Projects
-- [ntt/the_one](company/ntt/the_one/INDEX.md) — The-1 Card data platform (current)
-- [scb/datax](company/scb/datax/INDEX.md) — SCB Data-X (archive)
-- [new_company](company/new_company/INDEX.md) — placeholder
+| กลุ่ม | Source | รายการ |
+|---|---|---|
+| Common DE (10) | `skills/` | adr, data-contract-review, dpia-assessment, incident-runbook, kb-synth, lakehouse-maintenance, npv-appraisal, pipeline-design, spark-tune, table-format-decision |
+| AIA (9) | `company/aia/skills/` | databricks-{cost-optimization, genie-governance, observability, serverless-networking, streaming-pattern, uc-governance-sharing}, airflow-databricks-orchestration, de-solution-architecture, kafka-strimzi-cdc |
+| Lumora (5) | `lumora/skills/` + `library-framework/skills/` | lumora-{trend-scan, combo-recommend, content-batch, art-prompt}, content-taxonomy |
+| Crypto (2) | `crypto-trading/skills/` | crypto-ta-math, risk-management |
+| Track B (3) | `neurx/`, `regent-ai/` skills | agent-registry-patterns, agent-policy-engine, audit-trail-design |
 
-### Roles (knowledge files)
-- [Technical → Architect](roles/technical/architect/INDEX.md)
-- [Technical → Engineer](roles/technical/engineer/INDEX.md)
-- [Technical → Consultant](roles/technical/consultant/INDEX.md)
-- [Technical → Ops](roles/technical/ops/INDEX.md)
-- [Business](roles/business/INDEX.md)
+## Sandbox projects — สถานะ 2026-07-18 (ดู `projects-knowledge-base/portfolio-review-20260718.md`)
 
-### Pipelines
-- [Pipelines / Playbooks](pipelines/INDEX.md)
+lumora **PIVOT** (90-day content sprint, backend frozen — `sprint-2026-07/`) · crypto-trading **GO-VIABLE** (kill date 2026-08-31) · library-framework **folded → lumora** · neurx **KILLED-as-registry** · regent-ai **PARKED** (career capital + dogfood) · sentientnet **PARKED indefinite**
 
----
+## Ops
 
-## How the system works
-
-### When user opens Claude in a Project directory
-
-```
-1. Claude reads ~/.claude/CLAUDE.md      → knows about Agent/ system
-2. Claude reads Project/.../CLAUDE.md     → project-specific guidance (if exists)
-3. Claude consults Agent/company/<name>/<project>/ for that project's knowledge
-4. Claude can spawn subagents from ~/.claude/agents/ for role-based discussions
-5. Subagents pull deeper knowledge from Agent/roles/.../knowledge.md
-```
-
-### When user invokes a role-based agent
-
-```
-User: "ลอง data architect review architecture นี้หน่อย"
-   ↓
-Claude: Agent({subagent_type: "data-architect", prompt: "...context..."})
-   ↓
-Subagent (data-architect):
-  - Reads ~/Documents/Projects/Agent/roles/technical/architect/data-architect/knowledge.md
-  - Reads project context if relevant
-  - Returns analysis
-```
-
-### Multi-agent orchestration (Part 4)
-
-```
-For complex topics, use pipeline playbooks:
-   Agent/pipelines/playbooks/<topic>.md
-   describes which subagents to invoke + sequence + handoffs
-```
-
----
-
-## Conventions
-
-- **One INDEX.md per level** — every folder has its own to make navigation discoverable.
-- **Subagents are roles, not projects** — each subagent represents a function, not a company.
-- **Knowledge in roles/ is generic; knowledge in company/ is specific** — don't duplicate, link instead.
-- **Companies = real engagements** (where you've worked or will work) — drives memory + project conventions.
-
----
-
-## Related
-
-- Global instructions: `~/.claude/CLAUDE.md`
-- Subagent definitions: `~/.claude/agents/`
-- Settings: `~/.claude/settings.json`
-- Legacy memory (archive): `~/.claude/projects/-Users-wasin-Documents-ntt-project-*/`
-- Legacy workspace (archive): `~/Documents/ntt_project/the_one/`
+- Session health: doctor รายงานอัตโนมัติ (SessionStart) — แก้ด้วย `_infra/doctor.sh --fix`
+- Curation: `company/*/_inbox/YYYYMMDD-topic.md` → `/kb-synth` → `knowledge/` (commit = auto-embed)
+- Reindex เต็ม: `_infra/reindex.sh --reset` · MCP config อยู่ `~/.claude.json` (ไม่ใช่ settings.json)
+- `_prefix` dir = machine-excluded (ไม่ embed / ไม่ index)

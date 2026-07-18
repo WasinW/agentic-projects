@@ -1,8 +1,9 @@
 # Sin's Projects Knowledge Base
 
-> **Version**: 2026-06-27
+> **Version**: 2026-06-27 · **Updated 2026-07-18 (portfolio review)**
 > **Owner**: Sin (วศิน วังสมบัติ / ภัค)
 > **Purpose**: Master context document for individual project sessions. Every project-specific session should load this first to understand the portfolio, then focus on its assigned project.
+> **Companion (read before acting on portfolio strategy)**: `portfolio-review-20260718.md` — the review that produced the 2026-07-18 changes (see its §1 Executive Summary, §2 Portfolio Strategy, §4 90-Day Plan).
 
 ---
 
@@ -24,7 +25,7 @@ Workflow:
 
 ### Who Sin is as a builder
 
-- **Role**: Data Engineer at The1 (Central Group Thailand). Day job is GCP-heavy: Apache Beam/Dataflow, BigQuery, Bigtable, Pub/Sub, Cloud Composer, Iceberg/BigLake, Kafka, Terraform.
+- **Role**: Senior Data Engineer at **AIA** (insurance), started **2026-07-01**. Day job is Azure-heavy: Azure Databricks, Kafka/Strimzi/Debezium CDC on AKS, Spark, Terraform. (Previous: DE at The1 / Central Group — GCP stack; now archived reference, not the current employer.)
 - **Career direction**: Founder / IC Specialist track. Skills roadmap aimed at vector databases, RAG, LangGraph, agent evaluation, agentic AI patterns.
 - **Mindset**: Builder / architect, not "engineer who ships tickets". Thinks in systems, abstractions, long-term framework before code.
 - **Style**: Divergent and library-based. Prefers breadth before convergence. Multi-direction creative options preferred over premature lock-in.
@@ -47,6 +48,14 @@ Sin lost his mother in November 2024. He stores that as fuel, not as something t
 
 Don't bring this up in conversation unprompted. It's context, not content.
 
+### Employer IP boundary (AIA) — restated 2026-07-18
+
+Sin is a full-time employee at **AIA**, a regulated insurer. Hard boundary for every portfolio project (this text was previously written for The1; restated for AIA):
+
+- **No AIA internals in any public content or repo** — no code, data, schemas, architecture, credentials, customer/PII, or confidential material from AIA, and nothing derived from them that would expose AIA systems. Applies to Lumora posts/repos, the crypto engine, and any Track B artifact.
+- **Personal projects on personal time and personal equipment only** — never on AIA laptops, networks, or accounts.
+- AIA-specific engineering knowledge lives in the separate AIA project KB, not here and not in anything published.
+
 ---
 
 ## 2. Portfolio Overview
@@ -54,24 +63,58 @@ Don't bring this up in conversation unprompted. It's context, not content.
 Sin runs **two tracks in parallel**:
 
 ### Track A — Commercial / Cash Flow
-Projects that generate revenue or could in 1-3 years. Job: fund the vision track and reduce dependence on full-time employment.
+Projects that generate revenue or could. Job: **fund Sin's exit from employment** (not "fund Track B" — see revised thesis below).
 
-- **A1. Lumora** — O&O Multi-Channel Network for Thai creators (AI-automated)
-- **A2. Library Framework** — Generalizable content taxonomy + production system
-- **A3. Crypto Trading Engine** — Personal trading tool, not a product
+- **A1. Lumora** — O&O Multi-Channel Network for Thai creators (AI-automated) — **PIVOT: 90-day content sprint, backend FROZEN**
+- **A2. Library Framework** — content taxonomy + production system — **FOLDED into Lumora (no longer a standalone project)**
+- **A3. Crypto Trading Engine** — Personal trading tool, not a product — **GO-VIABLE (conditional), kill date 2026-08-31**
 
 ### Track B — AI Ecosystem Vision
-Long-term bets reframed for the agentic era. The original 2024 versions assumed "AI = model" — that assumption is now obsolete. Reframed below.
+Long-term bets reframed for the agentic era. The 2024 versions assumed "AI = model" — obsolete. **As of 2026-07-18, all three are killed-as-registry / parked. Track B is an OPTION, not an active roadmap** (see thesis + verdicts table below).
 
-- **B1. NeurX** — Agent Infrastructure & Registry
-- **B2. Regent AI** — Agent Governance & Trust Layer
-- **B3. SentientNet** — Sovereign / Decentralized Agent Network
+- **B1. NeurX** — Agent Infrastructure & Registry — **KILLED as registry; trust/provenance IP merged into Regent**
+- **B2. Regent AI** — Agent Governance & Trust Layer — **PARKED as product; kept as career capital + dogfood**
+- **B3. SentientNet** — Sovereign / Decentralized Agent Network — **PARKED indefinite**
 
-### Why both tracks at once
+### Thesis — how the two tracks actually relate (rewritten 2026-07-18)
 
-Track A → real revenue, real users, real product feedback. Lumora especially serves as **prototype customer** for Track B (uses agents, needs governance, eventually wants sovereignty over its data).
+> **Track A funds Sin's exit from employment.** Track B = an **OPTION** that must be **re-underwritten from a fresh landscape scan at unlock time** — not a roadmap waiting to execute.
 
-Track B → defines where the company is going. Without it, Sin becomes a one-off content business owner. With it, he's building toward a platform.
+Why the rewrite: the old thesis ("Track A funds Track B; specs are ready to execute") assumed Track B's 2024-era positioning would still hold when Track A finally pays. It won't. **Every landscape KB in this portfolio rotted in <13 months** — micropayments rail lost to x402/AP2, registry consolidating under the Linux Foundation (AAIF), the enforcement point taken by Entra Agent ID / Okta / free Microsoft OSS. So any Track B spec written today is archaeology by the earliest unlock (2027–28).
+
+Consequences:
+- Do **not** "maintain" Track B vision during the Track A sprint. If an un-park trigger fires, re-scan the market from scratch and re-underwrite before building anything.
+- The only Track B value bankable on today's horizon is **career capital**: Sin works inside a regulated insurer (AIA) that will face real agent-governance questions — the Regent KB monetizes *now* as "the person who understands agent audit/policy," at build cost ≈ 0.
+
+### Verdicts (2026-07-18 portfolio review)
+
+6 projects → **1.5 active workstreams + 1 self-run tool**. Nothing valuable is lost — 4 of 6 were already 0-LOC or mock-only.
+
+| Project | Verdict | Status / next action | Un-park / kill trigger |
+|---|---|---|---|
+| **Lumora** | **PIVOT** | 90-day content sprint; backend **FROZEN**; publish, don't engineer | Active — gated by the Lumora gate (below) |
+| **Library Framework** | **FOLDED into Lumora** | Not standalone; canonical = Lumora `01_creative_library.md` v3, rest are pointers; never a SaaS/license | Revisit in 12 mo *only if* ≥1 Lumora channel shows framework-attributable growth |
+| **Crypto Trading Engine** | **GO-VIABLE (conditional)** | 1 weekend: backtest → automate → journal | **Kill date 2026-08-31** — if still unused → archive with KB |
+| **NeurX** | **KILLED as registry** | Trust/provenance IP **merged into Regent** (Agent Trust & Governance); Runtime + Observability cut permanent | Does **not** re-open as a registry; trust thesis lives on inside Regent |
+| **Regent AI** | **PARKED as product** | Career capital + **dogfood** (PreToolUse policy hook + hash-chained audit on own fleet) | No product build until merged Track B has ≥1 external user **AND** Lumora Phase-1 revenue |
+| **SentientNet** | **PARKED indefinite** | Narrative only; micropayments pillar **deleted**; sovereign angle donated to Regent | Un-park only if **ALL 3**: Track A sustained cash-flow + NeurX/Regent external users + a real sovereign-buyer conversation |
+
+### Market-contact rule (portfolio-wide, 2026-07-18)
+
+**No project gets additional engineering / docs / KB hours until it completes its own next market-facing action.**
+
+- **Lumora** → next market action = **publish** (post). No new backend adapter until ≥100 posts published AND a named manual step costs >2 hrs/week.
+- **Crypto** → next market action = **use it live for 1 week**. No new features until it has actually been run.
+- **Parked / killed projects** (NeurX-as-registry, Regent-as-product, SentientNet, Library-standalone) → next market action = none → they **stay parked** and earn **zero hours**.
+
+Rationale: the best-maintained thing in this portfolio is the one with no market contact — that's a warning sign, not success. Planning hours on a project that hasn't touched the market is procrastination by definition.
+
+### Hours-tracking directive (starts 2026-07-18)
+
+The master doc never modeled hours/week — the biggest hole in the whole strategy. Honest budget during AIA ramp: **6–10 hrs/week this quarter**.
+
+- **Track actual side-project hours for 4 weeks starting 2026-07-18.** This number — not any roadmap — decides every schedule below.
+- **If actual < 6 hrs/week → rescope the Lumora sprint to 3 posts/week** (saymu-oracle as daily anchor) instead of missing the target silently.
 
 ---
 
@@ -81,7 +124,7 @@ Track B → defines where the company is going. Without it, Sin becomes a one-of
 
 **One line**: AI-automated holding company that owns multiple content channels across Thai cultural verticals.
 
-**Status**: Active. Most-developed framework so far.
+**Status**: **PIVOT (2026-07-18 portfolio review)** — 90-day content sprint, backend **FROZEN**. 8 months of build produced 0 posts / 0 followers / 0 THB; the fix is to *publish*, not to engineer. Reposition differentiation from "AI automation at scale" (commodity + platform-suppressed) → **AI-art aesthetic + สายมู cultural literacy + Sin's own voice**, ~70/30 human/AI, AI-labeled from post #1, no unofficial auto-publisher. See §2 verdicts table + `portfolio-review-20260718.md` §3.1.
 
 **Inspired by**: Ruhnn Holdings (China, 190+ KOLs, Alibaba-backed) and Beast Industries (MrBeast's closed-loop content-to-commerce).
 
@@ -97,9 +140,9 @@ Track B → defines where the company is going. Without it, Sin becomes a one-of
 - Connected by Sin-built AI agents.
 
 **Roadmap (3 phases)**:
-- **Phase 1**: Solo creator, 3 accounts owned by Sin. Target 50-200K THB/month. Budget $80-150/mo.
-- **Phase 2**: Boutique agency. Take on clients at 30-150K THB/month retainer. Target 300-700K THB/month.
-- **Phase 3**: Platform Intelligence Service. Sell directly to TikTok Shop / Shopee / Lazada. Six service types defined (creator discovery, trend intelligence, campaign mgmt, audience insights, content licensing, MCN partnership).
+- **Phase 1 (RE-MODELED 2026-07-18)**: Solo creator, 90-day content sprint. Base-case revenue **0–10K THB/mo in the first 6 months OF POSTING** (posting hasn't started yet). The old "50–200K THB/month" was a **top-percentile outcome mislabeled as base case** — deleted as a target. Budget $80-150/mo. **What decides whether Track A is real is NOT a revenue band — it's the Lumora gate: 1 post ≥50K views OR 1K followers by day 90.** Miss → change tone/catalog or park the project. Backend frozen for the whole sprint.
+- **Phase 2 (FROZEN until Phase-1 gate passes)**: Boutique agency; retainer clients. Do no thinking/architecture here until a real Phase-1 case study exists.
+- **Phase 3 (FROZEN)**: Platform Intelligence Service. Vision only — not on any current horizon.
 
 **Locked decisions**:
 - Agency model, NOT SaaS.
@@ -111,15 +154,15 @@ Track B → defines where the company is going. Without it, Sin becomes a one-of
 - Voice/persona strategy per channel (still using Library Framework axes)
 - Tech stack: which agent framework, which model APIs
 
-**Connection to Track B**: First customer of NeurX (agent infra), governed by Regent, eventually sovereign via SentientNet.
+**Connection to Track B**: (superseded 2026-07-18) — Lumora's Phase-1 "pipeline" is the **5 existing `lumora-*` skills + Claude Code + Sin's thumb** ($0 infra), not a NeurX customer. Do not build Lumora-as-customer-zero of any parked Track B project — "platform from one customer" is how solo founders drown. If Lumora ever needs agent plumbing, build it as Lumora-internal, not as NeurX.
 
 ---
 
 ### A2. Library Framework — Content × Theme × Media
 
-**One line**: A generalizable taxonomy + production system for AI-driven content, where Lumora is the first customer.
+**One line**: A generalizable taxonomy + production system for AI-driven content — now **internal IP inside Lumora**, not a separate product.
 
-**Status**: Designed inside Lumora, but conceptually separable.
+**Status**: **FOLDED into Lumora (2026-07-18 portfolio review)** — no longer a standalone project. Canonical source = Lumora `01_creative_library.md` v3; every other copy becomes a pointer (reconcile the Hero/Hub/**Hygiene** vs Help drift and fix the channel-count formula to `1 ≤ N ≤ S×A`, gates decide). Standalone SaaS/license is **ruled out** (commodity market, no proof). The only possible moat — a combo-performance dataset — accrues *only* inside Lumora once it starts posting. Revisit in 12 months only if ≥1 channel shows framework-attributable growth.
 
 **Why split from Lumora**: Same reason AWS split from Amazon retail. The framework solves a general problem (how do you systematically generate diverse content at scale without homogenization), not just Lumora's. Other creators / agencies / brands could license it.
 
@@ -165,7 +208,7 @@ Three audience-side variables:
 
 **One line**: Personal hybrid Python engine + TradingView overlay for crypto trade decisions. Not a product.
 
-**Status**: Active personal builder project. Specs locked, Step 1 implementation pending.
+**Status**: **GO-VIABLE, conditional (2026-07-18 portfolio review)** — v1 is actually done (1,623 LOC, 30 tests pass, 9 ADRs) but **dormant since 2026-06-07**; friction is the manual CLI, not the day job. 1-weekend timebox, in order: **backtest harness → automate (cron + Telegram push) → journal**, then optional (playbook table + `confidence.floor` wiring + position sizing + Elliott fix). **Kill date: 2026-08-31 — if still unused → archive with KB, no guilt.** Freeze roadmap: no dashboard, no predictive ML, no webhooks. Never productize (unvalidated tool + Thai SEC advisory liability).
 
 **Important framing**:
 - **NOT data engineering / pipeline work**. Don't apply DE mindset.
@@ -234,7 +277,7 @@ NeurX (infrastructure)        ← where agents live, how they discover each othe
 
 **One line**: The "npm of agents" — registry, runtime, interop layer for AI agents.
 
-**Old vision (deprecated)**: AI model marketplace. Dead because Hugging Face + Replicate + Together + Fireworks + OpenRouter own that space.
+**Status**: **KILLED as registry (2026-07-18 portfolio review)** — the neutral-registry window closed (Linux Foundation **AAIF** consolidation + hyperscaler marketplaces + A2A v1.2 signed AgentCards absorbing the trust wedge). A solo part-timer can't win a two-sided cold-start against foundation gravity. The one defensible pillar — **trust/provenance** — is **MERGED into Regent** as the "Agent Trust & Governance" project. **Runtime + Observability pillars are cut permanently** (each is a whole company). This does **not** re-open as a registry; re-scan the market before believing any positioning below. See `portfolio-review-20260718.md` §3.4.
 
 **New vision**: Agent-centric infrastructure.
 
@@ -268,7 +311,7 @@ NeurX (infrastructure)        ← where agents live, how they discover each othe
 
 **One line**: Audit, policy, and human-in-the-loop layer for agents that act in the real world.
 
-**Old vision (deprecated)**: Model explainability + AI ethics platform. Crowded space (Credo, Fiddler, Arize, W&B).
+**Status**: **PARKED as product (2026-07-18 portfolio review)** — the market validates the thesis, but a solo *unaudited* vendor cannot sell to compliance buyers (vendor-risk review = a locked door, not a hard sale). **CONVERT to career capital + dogfood**: build a PreToolUse policy enforcer + hash-chained JSONL audit on Sin's *own* agent fleet (1 weekend) — permission matrix, spend/rate caps, HITL threshold, chain verification — which doubles as protection for Lumora's content agents and as a live Regent demo. Position self as the agent-governance person at AIA. Substrate decision: **Cedar (or OPA/Rego), never invent a DSL**. Fix the EU AI Act Art. 12 wording (tamper-evidence is a defensible Art. 15 interpretation, not a literal mandate). **No product build until the merged Track B has ≥1 external user AND Lumora Phase-1 revenue.** This project is now also the home for NeurX's trust IP and SentientNet's sovereign-deployment angle. See §3.5.
 
 **New vision**: Agent autonomy is the actual unsolved problem.
 
@@ -303,7 +346,7 @@ NeurX (infrastructure)        ← where agents live, how they discover each othe
 
 **One line**: Agents that aren't owned by US Big Tech.
 
-**Old vision (deprecated)**: Federated learning + decentralized compute + AI DAO + token economy. Crypto/Web3 framing.
+**Status**: **PARKED indefinite (2026-07-18 portfolio review)** — activation probability ≈ 0 (product of 4 conditions each <50%); the micropayments rail is already lost (x402: 165M+ txns; Google AP2), and "nobody owns the sovereign-agent framing" is already false (ioMoVo, Nagent, hyperscaler sovereign clouds, Thailand's own ThaiLLM). **DELETE the micropayments pillar** — if agents ever need to pay, adopt x402/AP2 as a consumer, never build rails. The sovereign-deployment angle is **donated to Regent** (a *feature*, not a company). Keep ~150 lines of narrative for free; KB is **FROZEN — assume stale**; re-research from scratch at un-park, never incrementally. **Un-park only if ALL 3 fire**: Track A sustained cash-flow + NeurX/Regent external users + a real sovereign-buyer conversation. See §3.6.
 
 **New vision**: Less about crypto, more about sovereignty.
 
@@ -349,20 +392,22 @@ Library Framework ──────────┼───→ NeurX (workflows
 Crypto Engine ───── (standalone, no direct linkage)
 ```
 
-**Key sequencing insight**: Track A funds Track B. Lumora needs to hit Phase 1 revenue (50-200K THB/month) before NeurX/Regent receive serious development time. SentientNet stays as vision document until NeurX has users.
+**Diagram note (2026-07-18)**: the Track B arrows above are **vision-era**. NeurX is killed-as-registry, Regent is parked-as-product, SentientNet is parked-indefinite (see §2 verdicts). Lumora's real Phase-1 "pipeline" is the 5 `lumora-*` skills + Claude Code, not a custom backend or a NeurX dependency.
+
+**Key sequencing insight (revised 2026-07-18)**: Track A funds **Sin's exit from employment** — not Track B directly. Track B is an **option** to be re-underwritten from a fresh scan at unlock (2027–28 earliest), because every landscape KB here rotted in <13 months. Phase-1 revenue base case is **0–10K THB/mo in the first 6 months of posting** (the old 50–200K was a mislabeled top-percentile outcome). What proves Track A is real is the **Lumora gate** (1 post ≥50K views OR 1K followers by day 90), **not a revenue band**.
 
 ---
 
 ## 6. Open Decisions (portfolio-level)
 
-These are unresolved at the portfolio level and may come up in any session:
+Several 2026-06 open items were resolved by the 2026-07-18 review; kept here for the record.
 
-1. **Lumora vs. Library Framework — 1 project or 2?** Currently treated as 2. Sin may merge back. Sessions should ask before assuming.
-2. **First vertical for Lumora**: สายมู, อาหาร, ท่องเที่ยว, gadget, art, สุขภาพ — undecided.
-3. **NeurX positioning**: Global compete or Thai/SEA-first.
-4. **Funding model**: Bootstrap vs. raise. Currently bootstrap (Track A funds Track B), but may change at Phase 2 of Lumora.
-5. **Solo vs. co-founder**: Sin currently solo. Co-founder need will emerge if NeurX/Regent grow into real products.
-6. **Day job exit timing**: Track A revenue threshold for quitting The1. Not yet locked.
+1. ~~**Lumora vs. Library Framework — 1 project or 2?**~~ **RESOLVED (2026-07-18): 1** — Library Framework folded into Lumora as internal IP.
+2. **First vertical for Lumora**: leaning **สายมู** for the sprint (belief-driven, high affiliate conversion) — but record the LIVE-commerce handicap in the KB *before* locking archetype. Decide in one sitting; don't drag into research.
+3. ~~**NeurX positioning**: Global vs Thai/SEA-first.~~ **MOOT (2026-07-18)** — NeurX killed as registry; the question no longer applies.
+4. **Funding model**: Bootstrap (fail-cheap posture). Note: bootstrap funds **Sin's exit**, not Track B — Track B is a re-underwritten option, not a funded roadmap.
+5. **Solo vs. co-founder**: Sin solo. Co-founder question is dormant while Track B is parked.
+6. **Day job exit timing**: revenue ≥ salary × 1.5 for 6 months is a **2028+ event** in every credible scenario. Stop implying Year-1 escape velocity — that expectation is what kept 6 projects alive when one should get the oxygen.
 
 ---
 
@@ -375,10 +420,14 @@ When a Claude Code session works on one of these projects:
 - **Do** push back if Sin's instruction conflicts with locked decisions here. Surface the conflict, don't just override.
 - **Do** flag when reality (2026) contradicts plans written in 2024.
 - **Do** mirror the KB layout used for Lumora: `memory/`, `knowledge/`, `skills/` under `~/Documents/Projects/Agent/company/project_sandbox/{project_name}/`.
+- **Do** enforce the **market-contact rule** (§2): no project earns more engineering/docs/KB hours until it completes its own next market-facing action.
+- **Do** respect the **hours-tracking directive** (§2) — if actual < 6 hrs/week, rescope the Lumora sprint to 3 posts/week, don't miss silently.
+- **Do** honor the AIA **employer IP boundary** (§1) in anything that could become public.
 - **Don't** mix project work across sessions.
 - **Don't** apply DE/pipeline mindset to the Crypto Engine (it's a builder project, not data eng).
 - **Don't** apply SaaS framing to Lumora (it's an agency/MCN).
 - **Don't** assume "AI = model" — the unit is agent + workflow + context.
+- **Don't** resurrect or spend hours on **killed/parked** projects (NeurX-as-registry, Regent-as-product, SentientNet, Library-standalone). They earn zero hours until their un-park trigger fires (§2 verdicts). Old vision prose is history, not a to-do list.
 
 ---
 

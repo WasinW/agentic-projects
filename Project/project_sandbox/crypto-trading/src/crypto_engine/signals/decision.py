@@ -7,9 +7,13 @@ in v1), so it is intentionally not computed here.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from ..config import EngineConfig
 from ..contract import Invalidation
 from ..features.structure import Pivot, recent_swing
+
+STAND_ASIDE = "stand-aside"
 
 
 def derive_trend(ma_stack_label: str, structure_1d: str) -> str:
@@ -87,3 +91,110 @@ def structure_text(structure_1d: str) -> str:
         "HH/HL": "higher-highs / higher-lows",
         "LH/LL": "lower-highs / lower-lows",
     }.get(structure_1d, "mixed / no clear structure")
+
+
+# ---------- playbook decision table (doc/03 §4) — deterministic, not LLM prose ----------
+@dataclass
+class PlaybookDecision:
+    playbook: str
+    entry_source: str   # "nearest resistance" | "nearest support" | "range edges" | "watch" | "none"
+    reason: str
+
+
+def select_playbook(
+    trend: str,          # up | down | sideways  (regime.trend)
+    direction: str,      # long | short | neutral (bias.direction)
+    conviction: str,     # low | medium | high
+    vol: str,            # expansion | contraction | normal
+    confidence: float,
+    cfg: EngineConfig,
+) -> PlaybookDecision:
+    """Map (trend, direction, conviction, vol) -> playbook per the doc/03 §4 table.
+
+    Caveat surface #3: confidence < confidence.floor forces stand-aside (wires the
+    previously-dead `confidence.floor` knob). Baked-in discipline: no counter-trend,
+    low conviction -> stand-aside, range+expansion -> stand-aside.
+    """
+    floor = cfg.confidence.floor
+    if confidence < floor:
+        return PlaybookDecision(STAND_ASIDE, "none", f"confidence {round(confidence, 4)} < floor {floor}")
+
+    if direction == "neutral":
+        return PlaybookDecision(STAND_ASIDE, "none", "neutral bias")
+
+    strong = conviction in ("medium", "high")
+
+    if trend == "up":
+        if direction == "long":
+            if strong:
+                return PlaybookDecision("buy-the-dip (trend-following)", "nearest support", "uptrend + conviction")
+            return PlaybookDecision("stand-aside / wait-pullback", "none", "uptrend but low conviction")
+        return PlaybookDecision(STAND_ASIDE, "none", "no counter-trend (short in uptrend)")
+
+    if trend == "down":
+        if direction == "short":
+            if strong:
+                return PlaybookDecision("sell-the-rip (trend-following)", "nearest resistance", "downtrend + conviction")
+            return PlaybookDecision("stand-aside / wait-pullback", "watch", "downtrend but low conviction")
+        return PlaybookDecision(STAND_ASIDE, "none", "no counter-trend (long in downtrend)")
+
+    # trend == sideways (range)
+    if vol == "contraction":
+        return PlaybookDecision("range-fade", "range edges", "range + contraction")
+    if vol == "expansion":
+        return PlaybookDecision("stand-aside (breakout pending)", "await break", "range + expansion")
+    return PlaybookDecision(STAND_ASIDE, "none", "range, normal vol — no edge")
+
+
+# ---------- position sizing (deterministic risk-based) ----------
+@dataclass
+class PositionSize:
+    qty: float
+    notional: float
+    leverage: float
+    risk_amount: float
+    stop_distance: float
+    note: str
+
+
+def position_size(entry: float | None, stop: float | None, cfg: EngineConfig) -> PositionSize | None:
+    """qty = (risk_pct × equity) / stop_distance, capped at max_leverage × equity notional."""
+    sc = cfg.sizing
+    if not sc.enabled or entry is None or stop is None:
+        return None
+    stop_distance = abs(float(entry) - float(stop))
+    if stop_distance <= 0 or entry <= 0:
+        return None
+    risk_amount = sc.risk_pct * sc.equity
+    qty = risk_amount / stop_distance
+    notional = qty * entry
+    cap = sc.max_leverage * sc.equity
+    capped = notional > cap
+    if capped:
+        qty = cap / entry
+        notional = cap
+    leverage = notional / sc.equity if sc.equity else 0.0
+    qty = round(qty, sc.round_qty)
+    note = (
+        f"risk {sc.risk_pct * 100:.1f}% (~{risk_amount:.0f}) / stop dist {stop_distance:.2f} "
+        f"-> {qty} @ {entry:.2f} (notional {notional:.0f}, {leverage:.2f}x{' capped' if capped else ''})"
+    )
+    return PositionSize(qty=qty, notional=round(notional, 2), leverage=round(leverage, 4),
+                        risk_amount=round(risk_amount, 2), stop_distance=round(stop_distance, 2), note=note)
+
+
+def entry_from_source(entry_source: str, support: list[float], resistance: list[float],
+                      close: float) -> tuple[list[float] | None, float | None]:
+    """Derive an entry zone + a representative entry price from the playbook's source."""
+    if entry_source == "nearest support":
+        px = support[0] if support else close
+        return [px], px
+    if entry_source == "nearest resistance":
+        px = resistance[0] if resistance else close
+        return [px], px
+    if entry_source == "range edges":
+        edges = [x for x in (support[0] if support else None, resistance[0] if resistance else None) if x is not None]
+        if not edges:
+            return [close], close
+        return sorted(edges), edges[0]
+    return None, None  # watch / await break / none -> no position

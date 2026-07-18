@@ -15,6 +15,8 @@ from .pine import to_pine
 from .render import to_markdown
 
 app = typer.Typer(add_completion=False, help="Crypto trading decision-support engine (Step 1)")
+journal_app = typer.Typer(add_completion=False, help="Append-only trade journal + monthly plan-vs-actual review")
+app.add_typer(journal_app, name="journal")
 console = Console()
 
 
@@ -42,6 +44,7 @@ def analyze_cmd(
     refresh: bool = typer.Option(False, "--refresh", help="backfill before analyzing"),
     interpret: bool = typer.Option(False, "--interpret", help="run the LLM layer (Elliott/summaries/plan); needs ANTHROPIC_API_KEY"),
     pine: bool = typer.Option(False, "--pine", help="also emit a Pine Script v6 overlay to paste into TradingView"),
+    notify: bool = typer.Option(False, "--notify", help="push a one-line summary (Telegram if env set, else macOS notification)"),
 ):
     """Run Step 1 analysis -> JSON + markdown artifact in output/."""
     cfg = load_config(config)
@@ -65,9 +68,86 @@ def analyze_cmd(
     console.print(to_markdown(out))
     console.print(f"[dim]written: {json_path}{' + .pine' if pine else ''}[/]")
 
+    if notify:
+        from . import notify as N
+
+        channel = N.send(N.build_message(out), title=f"crypto-engine {symbol}")
+        console.print(f"[dim]notify: {channel}[/]")
+
 
 # expose `analyze` as the subcommand name (not analyze_cmd)
 app.command(name="analyze")(analyze_cmd)
+
+
+@app.command()
+def backtest(
+    symbol: str = typer.Option("BTCUSDT", "--symbol", "-s"),
+    config: str = typer.Option("config/engine.yaml", "--config", "-c"),
+    limit: int = typer.Option(0, "--limit", help="evaluate only the most-recent N anchor closes (0 = all)"),
+    stride: int = typer.Option(1, "--stride", help="evaluate every K-th anchor close (speed vs resolution)"),
+):
+    """Replay stored candles -> forward-return distribution per bias/conviction bucket.
+
+    Writes output/backtest_report.json + .md. Answers: do short-bias signals actually
+    show negative forward returns?
+    """
+    from .backtest import run_backtest, to_markdown as bt_md
+
+    cfg = load_config(config)
+    rep = run_backtest(cfg, symbol, limit=limit, stride=stride)
+
+    out_dir = Path(cfg.output.dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "backtest_report.json").write_text(rep.to_json(indent=2), encoding="utf-8")
+    (out_dir / "backtest_report.md").write_text(bt_md(rep), encoding="utf-8")
+
+    console.print(bt_md(rep))
+    console.print(f"[dim]written: {out_dir / 'backtest_report.json'} + .md[/]")
+
+
+@journal_app.command("log")
+def journal_log(
+    artifact: str = typer.Option(..., "--artifact", "-a", help="analyze artifact id, e.g. BTCUSDT_20260607T121226Z"),
+    action: str = typer.Option(..., "--action", help="long | short | close | skip"),
+    symbol: str = typer.Option("BTCUSDT", "--symbol", "-s"),
+    entry: float = typer.Option(None, "--entry"),
+    exit_: float = typer.Option(None, "--exit"),
+    stop: float = typer.Option(None, "--stop"),
+    size: float = typer.Option(None, "--size"),
+    r: float = typer.Option(None, "--r", help="realised R; computed from entry/exit/stop if omitted"),
+    planned_bias: str = typer.Option(None, "--planned-bias", help="engine bias at the time (for plan-vs-actual)"),
+    planned_playbook: str = typer.Option(None, "--planned-playbook"),
+    note: str = typer.Option(None, "--note"),
+    config: str = typer.Option("config/engine.yaml", "--config", "-c"),
+):
+    """Append a taken trade to the append-only journal (output/journal.jsonl)."""
+    from . import journal as J
+
+    cfg = load_config(config)
+    computed_r = r
+    if computed_r is None and entry is not None and exit_ is not None and stop is not None:
+        computed_r = J.compute_r(action, entry, exit_, stop)
+    e = J.JournalEntry(
+        artifact_id=artifact, symbol=symbol, action=action, entry=entry, exit=exit_,
+        stop=stop, size=size, r=computed_r, planned_bias=planned_bias,
+        planned_playbook=planned_playbook, note=note,
+    )
+    path = J.append_entry(e, J.default_path(cfg.output.dir))
+    rtxt = f" · {computed_r:+.2f}R" if computed_r is not None else ""
+    console.print(f"[green]logged[/] {action} {symbol}{rtxt} -> {path}")
+
+
+@journal_app.command("summary")
+def journal_summary(
+    month: str = typer.Option(None, "--month", "-m", help="YYYY-MM (default: all entries)"),
+    config: str = typer.Option("config/engine.yaml", "--config", "-c"),
+):
+    """Monthly plan-vs-actual review from the journal."""
+    from . import journal as J
+
+    cfg = load_config(config)
+    entries = J.read_entries(J.default_path(cfg.output.dir))
+    console.print(J.summary_markdown(J.monthly_summary(entries, month)))
 
 
 if __name__ == "__main__":

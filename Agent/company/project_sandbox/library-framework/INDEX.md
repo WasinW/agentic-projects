@@ -1,5 +1,10 @@
 # library-framework — KB Index
 
+> **FOLDED into LUMORA as internal IP (2026-07-18).** Not standalone. Canonical =
+> `…/lumora/knowledge/01_creative_library.md`. This dir = pointer only. Revisit as a
+> standalone only in 12 months, and only if ≥1 channel shows framework-attributable
+> public growth; if ever externalized → content-led authority, **never SaaS**.
+
 Project-scoped knowledge base for the **Library Framework** — generalizable
 Content × Theme × Media taxonomy + production system. Track A (commercial).
 
@@ -18,8 +23,12 @@ library-framework/
 ```
 
 ## Status
-Designed inside Lumora, conceptually separable. Key early question: separate
-product vs internal IP. No standalone code yet.
+**FOLDED into LUMORA as internal IP (2026-07-18).** The "separate product vs internal
+IP" question is **resolved = internal IP.** Canonical framework file lives in the Lumora
+KB (`01_creative_library.md`); the `knowledge/` file here is **superseded** (kept for
+history). No standalone code; repo `doc/` is empty. Revisit in 12 months only on
+framework-attributable channel growth; externalize (if ever) via content-led authority,
+never SaaS.
 
 ## Agents — all COMMON (consulted from `roles/`, none owned by this project)
 Lead: solution-architect, software-engineer, content-strategist.

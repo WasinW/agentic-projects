@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  launchd agent: run the crypto-engine daily analyze once a day at 09:00 local.
+
+  Install:
+    cp scripts/com.sin.crypto-daily.plist ~/Library/LaunchAgents/
+    launchctl load  ~/Library/LaunchAgents/com.sin.crypto-daily.plist   # enable
+    launchctl start com.sin.crypto-daily                                 # run now (test)
+    launchctl unload ~/Library/LaunchAgents/com.sin.crypto-daily.plist   # disable
+
+  Adjust the two absolute paths below if the repo moves.
+  For Telegram push, add TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID to EnvironmentVariables
+  (this file is local to ~/Library/LaunchAgents — do NOT commit real tokens).
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.sin.crypto-daily</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/wasin/Documents/Projects/Project/project_sandbox/crypto-trading/scripts/daily_analyze.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/wasin/Documents/Projects/Project/project_sandbox/crypto-trading</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <!-- <key>TELEGRAM_BOT_TOKEN</key><string>...</string> -->
+        <!-- <key>TELEGRAM_CHAT_ID</key><string>...</string> -->
+        <!-- <key>CE_INTERPRET</key><string>1</string>  and ANTHROPIC_API_KEY to run the LLM layer -->
+    </dict>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key><integer>9</integer>
+        <key>Minute</key><integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/wasin/Documents/Projects/Project/project_sandbox/crypto-trading/output/daily_launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/wasin/Documents/Projects/Project/project_sandbox/crypto-trading/output/daily_launchd.log</string>
+</dict>
+</plist>

@@ -1,6 +1,8 @@
 # Security Engineer — Comprehensive Knowledge
 
 > Deep reference for the security-engineer subagent — the **technical security implementer** (AppSec + cloud security + DevSecOps). Distinct from governance-consultant (policy/compliance) and devops-engineer (delivery).
+>
+> *Current primary cloud = **Azure** (AIA, since 2026-07). The-1 (GCP-primary, retail loyalty, Central Group) appears only as an explicitly-marked past-engagement example — never the default lens.*
 
 ---
 
@@ -14,7 +16,7 @@ The security engineer translates risk into **controls in code and infra** — gu
 
 ### vs governance-consultant vs devops-engineer
 
-| Role | Owns | Output | The-1 example |
+| Role | Owns | Output | Example (The-1, past engagement) |
 |---|---|---|---|
 | **governance-consultant** | Policy, compliance mapping, risk acceptance | PDPA/BoT control matrices, audit evidence | "PDPA Art. 37 requires a security control here" |
 | **security-engineer** (this) | Technical controls, detection, secure design | Semgrep rules, IAM policy, CSPM config, detections | "Here's the WAF rule + KMS key policy that satisfies it" |
@@ -28,7 +30,7 @@ Boundary: governance says *what must be true*, security engineer makes it *techn
 - **Integrity** — data/code not tampered (signing, provenance, checksums, WORM)
 - **Availability** — it's there when needed (DDoS protection, rate limits, redundancy)
 
-Every control maps to one or more. For The-1: customer PII = confidentiality-heavy (PDPA); loyalty point ledgers = integrity-heavy (fraud, BoT-adjacent).
+Every control maps to one or more. Past-engagement example (The-1, retail loyalty): customer PII = confidentiality-heavy (PDPA); loyalty point ledgers = integrity-heavy (fraud, BoT-adjacent).
 
 ### Core principles
 
@@ -88,7 +90,7 @@ The OWASP Top 10 was refreshed (final **2025** release, Jan 2026). Know the curr
 - **A02 Security Misconfiguration** — jumped from #5 → #2 (cloud + IaC sprawl).
 - **A03 Software Supply Chain Failures** — new/expanded from "Vulnerable Components"; dependencies, build systems, distribution.
 - Plus Injection, Insecure Design, Cryptographic Failures, Authentication Failures, and a new **Mishandling of Exceptional Conditions**.
-- **API Security Top 10** is a *separate* list (BOLA, mass assignment) — use it for API-heavy systems like The-1's customer-profile / loyalty APIs.
+- **API Security Top 10** is a *separate* list (BOLA, mass assignment) — use it for API-heavy systems (past-engagement example: The-1's customer-profile / loyalty APIs).
 
 ### The scanning trio — SAST / DAST / SCA
 
@@ -103,7 +105,7 @@ SAST = "is the code wrong"; DAST = "is the deployed thing exploitable"; SCA = "i
 ### Secrets management
 
 - Never in code, config, env files committed to Git, or CI logs. Scan for them (gitleaks, trufflehog) in pre-commit *and* CI.
-- Cloud-native first (**GCP Secret Manager** for The-1), Vault for multi-cloud / dynamic secrets.
+- Cloud-native first (**Azure Key Vault** on the current Azure-primary stack, AIA; was **GCP Secret Manager** on the past The-1 engagement), Vault for multi-cloud / dynamic secrets.
 - **Workload identity > long-lived keys** — GCP Workload Identity Federation, IAM service-account impersonation, short-lived tokens. A leaked 1-hour token beats a leaked permanent key.
 - Rotate on a schedule and on suspected compromise; make rotation automated or it won't happen.
 
@@ -125,7 +127,7 @@ SAST = "is the code wrong"; DAST = "is the deployed thing exploitable"; SCA = "i
 
 ### Encryption + key management (KMS)
 
-- **At rest**: default cloud encryption everywhere; **CMEK** (customer-managed keys) for regulated/sensitive data so *you* control rotation and revocation — for The-1 PII, CMEK in Cloud KMS, not Google-managed default.
+- **At rest**: default cloud encryption everywhere; **CMEK** (customer-managed keys) for regulated/sensitive data so *you* control rotation and revocation — currently (AIA, Azure) that's customer-managed keys in Azure Key Vault, not platform-managed default; on the past The-1 engagement it was CMEK in GCP Cloud KMS.
 - **In transit**: TLS 1.2+ everywhere, no plaintext internal hops for sensitive data.
 - **Key hygiene**: separate keys per data domain (blast-radius), automatic rotation, key access logged + alerted, HSM-backed keys for the most sensitive (Cloud HSM / external key manager for crypto-shredding requirements).
 - **Field/app-level** encryption or tokenization for the crown jewels (card-adjacent data) — defense beyond disk encryption.
@@ -179,7 +181,7 @@ Respond  → detections → IR playbook → postmortem
 
 ### CSPM / CNAPP (the big 2025–2026 shift)
 The market **consolidated** — standalone CSPM/CWPP/CIEM/DSPM tools merged into **CNAPP** (Cloud-Native Application Protection Platform). Gartner: by 2027, 60% of enterprises adopt CNAPP. Deep SOC integration now distinguishes mature CNAPPs.
-- **Wiz** — CNAPP market leader; agentless, **graph-based** (the differentiator: maps attack paths across CSPM+CWPP+CIEM+DSPM). Acquired by Google (~$32B, agreed Mar 2025) — relevant for The-1's GCP-primary stance.
+- **Wiz** — CNAPP market leader; agentless, **graph-based** (the differentiator: maps attack paths across CSPM+CWPP+CIEM+DSPM). Acquired by Google (~$32B, agreed Mar 2025) — was relevant for the past The-1 engagement's GCP-primary stance; less central now that the current primary cloud is Azure (AIA).
 - **Prisma Cloud → Cortex Cloud** (Palo Alto, rebranded Feb 2025) — CNAPP + CDR engine.
 - **Orca, Uptycs, Aqua** — alternatives.
 - **GCP Security Command Center (SCC)** — cloud-native CSPM/CNAPP for GCP-only; cheaper entry, less cross-cloud.
@@ -191,13 +193,14 @@ The market **consolidated** — standalone CSPM/CWPP/CIEM/DSPM tools merged into
 
 ### Secrets
 - **HashiCorp Vault** — multi-cloud, dynamic secrets, PKI, encryption-as-a-service.
-- **GCP Secret Manager** — cloud-native (The-1 default).
+- **Azure Key Vault** — cloud-native secrets on the current Azure-primary stack (AIA).
+- **GCP Secret Manager** — cloud-native; was the default on the past The-1 engagement.
 - **External Secrets Operator** — sync cloud secrets into K8s.
 - **gitleaks / trufflehog** — secret *detection* in code/history.
 
 ### Detection / SIEM / runtime
 - **Falco** (CNCF) / **Tetragon** (eBPF) — runtime threat detection in K8s.
-- **GCP SCC + Chronicle** (Google SecOps SIEM) — cloud-native detection for The-1.
+- **Microsoft Defender / Sentinel** — cloud-native detection on the current Azure-primary stack (AIA). **GCP SCC + Chronicle** (Google SecOps SIEM) was cloud-native detection on the past The-1 engagement.
 - **Wazuh** (OSS SIEM), **Elastic Security**, **Splunk ES** — alternatives.
 - Detection-as-code with **Sigma** rules (vendor-neutral).
 
@@ -246,20 +249,20 @@ Beyond the buzzword: **identity-aware proxy** in front of apps (GCP IAP / Beyond
 ### Cloud security per provider
 | | IAM model | CSPM-native | Key gotcha |
 |---|---|---|---|
-| **GCP** (The-1 primary) | Resource hierarchy (org→folder→project), IAM bindings, **Org Policy** constraints | Security Command Center | Project-level blast radius; service-account key sprawl; default networks too open |
+| **GCP** (past The-1 engagement) | Resource hierarchy (org→folder→project), IAM bindings, **Org Policy** constraints | Security Command Center | Project-level blast radius; service-account key sprawl; default networks too open |
 | **AWS** | IAM policies + SCPs, accounts as boundary | Security Hub + GuardDuty | IAM policy complexity; over-broad `*` actions; public S3 |
-| **Azure** | RBAC + Entra ID, mgmt groups | Defender for Cloud | RBAC/Entra split confusion; over-privileged app registrations |
+| **Azure** (current primary, AIA) | RBAC + Entra ID, mgmt groups | Defender for Cloud | RBAC/Entra split confusion; over-privileged app registrations |
 
-Cross-cloud (The-1 is multi-cloud) → a **CNAPP (Wiz)** gives one pane vs three native tools; native tools are cheaper per-cloud. Decision: single-cloud-heavy → native + targeted tooling; genuinely multi-cloud + regulated → CNAPP.
+Cross-cloud (The-1, past engagement, was multi-cloud) → a **CNAPP (Wiz)** gives one pane vs three native tools; native tools are cheaper per-cloud. Decision: single-cloud-heavy → native + targeted tooling; genuinely multi-cloud + regulated → CNAPP. Current context (AIA) is Azure-primary — native Defender for Cloud is the first-stop pick unless multi-cloud sprawl emerges.
 
 ### Detection engineering
-Treat detections as code: **Sigma rules** in Git, tested against sample logs, CI-deployed to the SIEM, versioned, peer-reviewed. Map coverage to **MITRE ATT&CK** to find gaps. Measure detections by true-positive rate and time-to-detect, retire noisy ones. Cloud-native: GCP SCC findings + Chronicle/Google SecOps for The-1.
+Treat detections as code: **Sigma rules** in Git, tested against sample logs, CI-deployed to the SIEM, versioned, peer-reviewed. Map coverage to **MITRE ATT&CK** to find gaps. Measure detections by true-positive rate and time-to-detect, retire noisy ones. Cloud-native: Defender/Sentinel on the current Azure-primary stack (AIA); was GCP SCC findings + Chronicle/Google SecOps on the past The-1 engagement.
 
 ### Threat hunting
 Proactive search for what detections missed — hypothesis-driven ("if an attacker were living off the land here, I'd expect X"). Pull from ATT&CK TTPs, recent threat intel, anomalies in IAM/network logs. Output feeds new detections (hunt → find → codify into a Sigma rule).
 
 ### Security for data / ML
-- **Data exfil** — the dominant data-platform threat. Controls: egress restrictions (VPC-SC perimeters on GCP — key for The-1's BigQuery/data lake), DLP scanning + classification, column-level access + masking, query audit + anomaly detection. Coordinate with **data-architect** on classification.
+- **Data exfil** — the dominant data-platform threat. Controls: egress restrictions (Azure Private Link / Network Security Perimeter for the current Azure-primary stack — AIA's Databricks/ADLS; was VPC-SC perimeters on GCP for the past The-1 engagement's BigQuery/data lake), DLP scanning + classification, column-level access + masking, query audit + anomaly detection. Coordinate with **data-architect** on classification.
 - **Model security** — protect training data (poisoning), model artifacts (theft via signed registry), and inference endpoints (abuse, extraction).
 - **LLM / prompt injection** — **OWASP LLM Top 10 (2025)**: prompt injection is #1 (direct + indirect; indirect via poisoned RAG/tool content is the hard one — LLMs don't separate instructions from data). Agentic systems (LLMs calling tools/APIs/DBs autonomously) got their **own OWASP Top 10** in late 2025 — the model's *actions* become the attack surface. Controls: treat all model output as untrusted, least-privilege the agent's tools, human-in-loop for high-impact actions, output filtering, sandboxing. **Hand the deep version to ai-engineer**; you own the *infra-side* controls (tool scoping, network egress from the agent, secrets the agent can reach).
 
@@ -305,7 +308,7 @@ Distinct from devops outage IR — here the system may be **actively adversarial
 |---|---|
 | **governance-consultant** | They map controls to PDPA/BoT/ISO; I implement + produce evidence. Breach → they own notification clock, I own technical IR. Risk acceptance is theirs; control design is mine. |
 | **devops-engineer** | I define the security pipeline stages (SAST/SCA/IaC gates, signing, admission control); they own the pipeline + infra it runs in. DevSecOps = our shared surface. |
-| **cloud experts (GCP / AWS / Azure)** | Per-cloud IAM, CSPM, encryption, network specifics. GCP expert is primary for The-1 (SCC, Org Policy, VPC-SC, CMEK). I set the security *bar*; they implement per-cloud. |
+| **cloud experts (GCP / AWS / Azure)** | Per-cloud IAM, CSPM, encryption, network specifics. Azure expert is primary for the current engagement (AIA — Defender for Cloud, Entra ID, Private Link, Key Vault CMK); GCP expertise (SCC, Org Policy, VPC-SC, CMEK) reflects the past The-1 engagement. I set the security *bar*; they implement per-cloud. |
 | **ai-engineer** | LLM/agent security — they own model behavior + prompt-injection defenses in the app; I own infra controls (tool scoping, egress, secrets, sandboxing). OWASP LLM Top 10 is shared ground. |
 | **data-architect** | Data classification, column-level access, masking, VPC-SC perimeters, exfil controls. They model the data; I secure its movement + access. |
 | **software-engineer** | Secure coding, fixing SAST/SCA findings, threat-model participation. I give paved-road defaults + rules; they build on them. |

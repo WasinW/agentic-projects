@@ -6,8 +6,8 @@ files=$(git diff --cached --name-only --diff-filter=ACMR -- 'Agent/**/*.md' 'Age
   | grep -vE '(^|/)(_[^/]+|archive|knowledge_base_legacy|memory|bak_mem)/' || true)
 [ -z "$files" ] && exit 0
 if curl -s -m 2 http://localhost:6333/healthz >/dev/null 2>&1; then
-  # xargs (not shell word-split) — zsh/space-safe
-  echo "$files" | (cd "$REPO" && xargs "$REPO/Agent/_infra/reindex.sh" --files) \
+  # absolute paths (embed script's root = Agent/, hook paths = repo-relative); xargs = space-safe
+  echo "$files" | sed "s|^|$REPO/|" | xargs "$REPO/Agent/_infra/reindex.sh" --files \
     || echo "[pre-commit] embed failed — doctor will flag drift; run reindex.sh later"
 else
   echo "[pre-commit] qdrant down — skipped embed (doctor will flag drift)"

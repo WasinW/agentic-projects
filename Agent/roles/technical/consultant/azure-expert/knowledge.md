@@ -1,6 +1,33 @@
 # Azure Expert — Comprehensive Knowledge
 
 > Deep reference for the azure-expert subagent. Production Azure for data + AI workloads.
+> **AIA is the current, PRIMARY Azure engagement** — §0 grounds this reference in that
+> live estate; the general Azure material (§1+) is the evergreen backbone.
+
+---
+
+## 0. Current engagement — AIA (Azure is the PRIMARY stack)
+
+> Sin is a Senior DE at **AIA** (life insurance), started 2026-07-01. Azure is the
+> **current, live** platform — not a retrospective. Ground answers in this estate.
+> Authoritative map: `~/Documents/Projects/Agent/company/aia/knowledge/data-platform-architecture.md`.
+
+**The estate (left → right):**
+`sources → CDC (Qlik Replicate + Debezium) → Kafka on AKS (Strimzi) → Azure Databricks (real-time + batch clusters) → ADLS Gen2 medallion (RAW → Persist → Staging → marts) → Azure SQL MI ODS + Synapse dedicated SQL EDW → serving (PowerBI, ESB APIs)`. Orchestrated by **ADF + Integration Runtime**, governed by **Purview + Data 360**, secrets in **Key Vault**, images in **ACR**, CI = **Jenkins/Bitbucket**. Lake protocol = **ABFSS**. Config-driven ADB jobs via an **Azure SQL MI "Framework DB"** (`prd_frmwrk_db`). Every prod resource has a **DR twin**.
+
+**Sin's Azure surface:**
+- **Producer/ingest (own domain):** Kafka/Strimzi/Debezium CDC on **AKS** — onboard tables via `table.include.list`, promote dev→uat→prod+dr, Strimzi version migrations. (See `kafka-strimzi-cdc` skill.)
+- **Compute (new focus):** the **ADB** real-time + batch clusters + the framework DB.
+- **Cost-dashboard PoC:** share Azure-infra / DBU cost to business teams with per-team RLS, cross-workspace.
+
+**Azure angles that dominate day-to-day here:**
+- **Networking is the recurring blocker.** UC `GRANT` ≠ reachability — the consumer compute plane reads the provider's **ADLS directly** (credential vending), so storage firewall / private endpoint / **NCC / NSP** must allow it (serverless: allow the `AzureDatabricksServerless.<region>` service tag; subnet allowlists retired **2026-06-09**). A cross-workspace `SELECT` that 403s is a **network** problem, not a grant. → skill `databricks-serverless-networking`; ref `databricks-uc-cross-workspace-access.md`.
+- **Corp Zscaler proxy does TLS MITM.** `az login` / `databricks` / `pip` / `git` fail with "unable to get local issuer certificate" because they use certifi, not the OS store. Fix = a master CA bundle (certifi + Zscaler root **AND intermediates**); ARM (login phase 2) needs the intermediate. Never `--insecure`. → `corp-proxy-zscaler-tls.md`.
+- **Entra ID = the identity spine.** UC resolves account vs workspace users through Entra; row filters use `is_account_group_member()` on **account** groups, not `is_member()`. Managed Identity > SP secrets; PIM + Conditional Access on data-platform access.
+- **Billing.** `system.billing.usage` is LIST-price + DBU-only and does **not** match the Azure Portal actual (classic-VM compute is billed separately in the Azure subscription). For real chargeback, join DBU usage to Azure Cost Management by tag.
+- **Multiple ADB workspaces** (DS-Lab / Departmental / Common / Amplify) share one UC metastore → cross-workspace UC share / Delta share is viable (verify same `current_metastore()`).
+
+**Load these AIA skills** for the recurring topics: `databricks-serverless-networking` (network gate), `databricks-uc-governance-sharing` (Entra→UC identity + sharing), `de-solution-architecture` (platform choices). Defer Databricks-internal detail (UC/Delta/DLT/Photon/DBU tuning) to **`databricks-expert`**; Kafka producer detail to `kafka-strimzi-cdc`.
 
 ---
 
@@ -88,6 +115,14 @@ Banking on Azure typical pattern:
 - Sentinel for SIEM
 - Defender for Cloud for security posture
 - Strong Entra ID integration with on-prem AD
+
+> **Past experience — SCB Data-X (Azure retrospective).** Sin's prior role: a
+> config/metadata-driven ETL framework on **Azure Databricks + ADF** (datalake →
+> RDT → CardX RDT), after migrating HDInsight + shell scripts → Databricks. The
+> banking-on-Azure patterns above are drawn from that estate — treat as
+> **retrospective reference**, not the current platform. The config-driven-framework
+> instinct carries directly to AIA's ADB "Framework DB" (§0) — but the two designs
+> are **NOT** the same; do not make that analogy without verifying.
 
 ---
 

@@ -1,5 +1,10 @@
 # neurx — KB Index
 
+> **STATUS: KILLED-as-registry 2026-07-18.** Killed as a standalone agent registry; trust/provenance IP
+> merged into **Regent** (`../regent-ai/`). Runtime + Observability cut permanently. Decision:
+> [`knowledge/adr-0001-kill-as-registry-2026-07-18.md`](knowledge/adr-0001-kill-as-registry-2026-07-18.md).
+> KILL, not park — no un-kill as a registry; a future trust product is a NEW underwrite. Sections below are FROZEN.
+
 Project-scoped knowledge base for **NeurX** — Agent Infrastructure & Registry.
 Track B (AI ecosystem vision). The base layer: where agents live + discover each other.
 
@@ -17,8 +22,10 @@ neurx/
 ```
 
 ## Status
-Vision/architecture stage. Old "AI model marketplace" vision deprecated. Gated
-behind Lumora Phase-1 revenue before serious build time.
+**KILLED-as-registry 2026-07-18** (was: vision/architecture stage). See ADR-0001. Neutral-registry window
+closed by AAIF/Linux Foundation consolidation + A2A v1.2 signed AgentCards (absorbed the trust wedge) +
+hyperscaler marketplaces; two-sided cold-start unwinnable solo/part-time. Trust/provenance IP → Regent.
+Runtime + Observability cut permanently. Lumora = Regent's customer-zero (not NeurX's).
 
 ## Agents — all COMMON (consulted from `roles/`, none owned by this project)
 Lead: ai-architect, platform-architect, ai-engineer.

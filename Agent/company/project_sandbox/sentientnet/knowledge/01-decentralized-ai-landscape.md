@@ -1,5 +1,19 @@
 # SentientNet — Decentralized / Sovereign AI Landscape (2026)
 
+> **FROZEN 2026-07-18 — assume stale. Do not extend or act on this file.** SentientNet is
+> PARKED indefinitely. Re-research from scratch only if un-parked (this scan rots faster than
+> the project's prerequisites can mature). Original scan below is kept as historical context.
+>
+> **Addendum (2026-07-18), 5 lines — what has already invalidated this scan:**
+> 1. **Micropayments rail is decided by others** — x402 (165M+ txns, 69K agents), Google AP2,
+>    Skyfire, card networks. The micropayments pillar is **deleted**; if agents ever pay, adopt
+>    x402/AP2 **as a consumer**, never build rails.
+> 2. **The sovereign buyer is building its own** — Thailand's **ThaiLLM** (state-run), THB 500B+
+>    cloud pledges, Thailand AI Cloud, ETDA roadmap. "None own the sovereign framing" is now false.
+> 3. **Sovereign-deployment angle donated to Regent** — it is a Regent *feature* (data residency
+>    + self-host on the governance/audit layer), reaching the same buyer ~5 years sooner, not a
+>    standalone decentralized network. See `regent-ai/knowledge/sovereign-deployment-angle.md`.
+>
 > Project-specific, **vision-stage** knowledge. Goal = clarify position + roadmap, NOT build.
 > Blockchain design depth lives in `roles/technical/architect/blockchain-architect` +
 > business/regulatory lens in `roles/business/blockchain-consultant` — consult those.
@@ -8,8 +22,9 @@
 ## 1. Reframing (from master §B3)
 
 Old vision (federated learning + AI DAO + token economy) is deprecated. New framing =
-**sovereignty**: who owns the agent, where it runs, who it depends on. Crypto rails matter
-only where they genuinely fit (agent-to-agent micropayments) — not as the headline.
+**sovereignty**: who owns the agent, where it runs, who it depends on. (The micropayments
+angle is **deleted** as of 2026-07-18 — x402/AP2 won that rail; agents, if they pay, are
+consumers of it, not builders of it.)
 
 ## 2. The 2026 landscape (none own "sovereign agent" framing yet)
 
@@ -28,8 +43,8 @@ governments/enterprises that won't depend on US Big Tech"** framing is still ope
 ## 3. The four pillars vs reality
 
 - **User-owned agents** (run on your infra) — closest to Ritual's sovereign-execution idea; differentiator is the *sovereignty* promise, not the chain.
-- **Agent-to-agent micropayments** — the one place crypto rails clearly fit (Virtuals/FET prove demand).
-- **Sovereign deployment** (Thai gov / SEA / EU, no US dependency) — geopolitical pull is real; this is the wedge.
+- ~~**Agent-to-agent micropayments**~~ — **DELETED 2026-07-18.** x402/AP2/Skyfire won the rail; adopt as a consumer if ever needed, never build.
+- **Sovereign deployment** (Thai gov / SEA / EU, no US dependency) — geopolitical pull is real, but the realizable version is now a **Regent** feature (see addendum); as a standalone network the buyer is inaccessible to a solo.
 - **Federated agent learning** — learn across orgs without centralizing data; overlaps blockchain-architect + governance KB.
 
 ## 4. Honest reality check (invoke before any token framing)

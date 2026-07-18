@@ -99,6 +99,30 @@ A fictional character of the target audience. **How to write one:**
 - **Narrow** — one pillar/aesthetic, fast algo lock, lower ceiling, easier monetization match.
 - Sin's default: **broad theme, multi-aesthetic**, manage algo confusion via batching + per-account split (multi-account strategy handles narrowing later).
 
+### 🔢 Channel count (how many channels to split into)
+
+When deciding whether one audience should be **one channel or several**, use:
+
+```
+1 ≤ N ≤ S × A     — the V1/V2/V3 gates decide where N lands.
+```
+
+- **S** = subject / topic breadth · **A** = audience-segment (aesthetic) count.
+- **Upper bound `S × A`** — the most channels you could ever justify (one per subject × segment cell).
+- **Lower bound `1`** — a *single* channel can serve **all** S × A cells at once (Sin's own default is exactly this: one broad, multi-aesthetic channel). The bounds only frame the space; the arithmetic decides **nothing**.
+
+> **Correction (2026-07-18):** the old lower bound `MIN(S,A) ≤ N` was **pseudo-math** — false. One channel can cover S subjects × A segments, so the true floor is `1`. Lumora's own broad-multi-aesthetic default violated the old floor. All the real decision power lives in the gates below, not the bounds.
+
+**The V1/V2/V3 gates (this is what actually decides N):**
+
+- **V1 — overlap threshold (~30%):** two candidate segments that overlap more than this should **merge** into one channel.
+- **V2 — viable audience size (> ~10K):** a segment below this is **not worth its own channel** — fold it in.
+- **V3 — positioning distinctness:** each candidate channel must pass *"is it meaningfully different?"* — if not, merge.
+
+**Procedure:** list subjects (S) + segments (A) → apply **V1** (merge overlaps) → drop sub-**V2** segments → **V3**-test each survivor → the count that remains is N.
+
+> ⚠️ **Over-splitting is the classic solo-creator failure mode.** For a one-person shop, every extra channel multiplies posting + maintenance load with **no shared-audience compounding** — you thin every channel and sustain none. **Default to N = 1.** Only split when a segment genuinely *fails V1* (too distinct to merge) **and** *passes V2* (big enough) **and** *passes V3* (distinct positioning). The formula's job is to make you justify each split against the gates — not to hand you a number.
+
 ---
 
 ## Content axis (C1–C10)

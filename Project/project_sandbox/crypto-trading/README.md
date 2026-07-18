@@ -23,8 +23,30 @@ pip install -e ".[dev]"
 crypto-engine analyze --symbol BTCUSDT --tf 1h,4h,1d
 # -> output/BTCUSDT_<ts>.json  (+ .md summary)
 
+# backtest — replay stored candles -> forward-return distribution per bias/conviction
+crypto-engine backtest --symbol BTCUSDT      # -> output/backtest_report.{json,md}
+
+# trade journal (append-only output/journal.jsonl)
+crypto-engine journal log --artifact BTCUSDT_<ts> --action short \
+  --entry 105000 --exit 98000 --stop 108000 --planned-bias short
+crypto-engine journal summary --month 2026-07   # plan-vs-actual review
+
 pytest
 ```
+
+## Automation (daily, hands-off)
+`scripts/daily_analyze.sh` runs `analyze --refresh --notify` and pushes a one-line
+summary: **Telegram** if `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` are exported, else a
+**macOS** notification, else it just writes the `output/` artifact. No tokens are stored
+in the repo. Schedule it daily at 09:00 via launchd:
+```bash
+cp scripts/com.sin.crypto-daily.plist ~/Library/LaunchAgents/
+launchctl load  ~/Library/LaunchAgents/com.sin.crypto-daily.plist   # enable
+launchctl start com.sin.crypto-daily                                 # run now (test)
+launchctl unload ~/Library/LaunchAgents/com.sin.crypto-daily.plist   # disable
+```
+For Telegram push, add `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` to the plist's
+`<EnvironmentVariables>` (local to `~/Library/LaunchAgents` — never commit real tokens).
 
 ## Storage
 Parquet = store-of-record (`data/candles/symbol=BTCUSDT/timeframe=1h/*.parquet`),
@@ -47,9 +69,11 @@ macro-regime knob) live in `config/engine.yaml`. See `doc/03-signal-logic-spec.m
 export ANTHROPIC_API_KEY=...
 crypto-engine analyze --symbol BTCUSDT --interpret
 ```
-`--interpret` runs Claude (Opus 4.8, adaptive thinking, structured outputs) over the
-deterministic *digest* (never raw candles) to fill `elliott` / `summaries` / `plan`,
-and folds a single low-weight `elliott_1d` vote into confluence (supporting view).
+`--interpret` runs Claude (model in `engine.yaml` `llm.model`, default **claude-sonnet-5**;
+adaptive thinking, structured outputs) over the deterministic *digest* (never raw candles)
+to fill `elliott` / `summaries` / `plan` prose. The playbook is now **deterministic**
+(doc/03 §4); the LLM only adds `targets` / `r_r`. It also folds a single low-weight
+`elliott_1d` vote into confluence, now grounded in the full 1d pivot series (ADR 0014).
 
 ## Status
 - [x] P0 scaffold + §6 contract models
@@ -59,4 +83,8 @@ and folds a single low-weight `elliott_1d` vote into confluence (supporting view
 - [x] P4 emit JSON/md + manual run
 - [x] LLM interpretive layer (Elliott · summaries · plan)
 - [x] Pine bridge (levels-as-Pine) — `analyze --pine` → `output/*.pine`
-- [ ] (later) dashboard · webhook action leg · predictive ML
+- [x] Backtest harness — forward-return by bias/conviction (ADR 0010)
+- [x] Trade journal — append-only jsonl + plan-vs-actual (ADR 0011)
+- [x] Deterministic playbook + position sizing + `confidence.floor` (ADR 0014)
+- [x] Daily automation — launchd + Telegram/macOS notify
+- [ ] (frozen until used — kill date 2026-08-31, ADR 0012) dashboard · webhook · predictive ML

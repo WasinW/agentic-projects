@@ -26,8 +26,11 @@ def test_analyze_produces_valid_contract():
     reparsed = Step1Output.model_validate(json.loads(out.to_json()))
     assert reparsed.meta.symbol == SYMBOL
     assert set(reparsed.bias.timeframe_alignment) == set(CFG.universe.timeframes)
-    # v1: interpretive blocks null
-    assert reparsed.elliott is None and reparsed.summaries is None and reparsed.plan is None
+    # LLM-owned blocks null in the deterministic path...
+    assert reparsed.elliott is None and reparsed.summaries is None
+    # ...but the playbook is now deterministic (doc/03 §4), with LLM targets/r_r absent
+    assert reparsed.plan is not None and reparsed.plan.playbook
+    assert reparsed.plan.targets is None and reparsed.plan.r_r is None
     # confluence sums to ~1
     cs = reparsed.confluence_score
     assert abs(cs.long + cs.short + cs.neutral - 1.0) < 1e-3

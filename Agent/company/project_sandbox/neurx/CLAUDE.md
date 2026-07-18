@@ -1,5 +1,12 @@
 # CLAUDE.md — neurx (KB context)
 
+> **STATUS: KILLED-as-registry 2026-07-18.** NeurX is dead as a standalone agent registry.
+> Trust/provenance IP merged into **Regent** (`../regent-ai/`, the single Track B "Agent Trust &
+> Governance" project). Runtime + Observability pillars cut permanently. Formal decision:
+> [`knowledge/adr-0001-kill-as-registry-2026-07-18.md`](knowledge/adr-0001-kill-as-registry-2026-07-18.md).
+> This is a KILL, not a park — do not resume a build. A future trust product = a NEW underwrite (see ADR).
+> Everything below is FROZEN historical context; do not act on it.
+
 Project-scoped agent context for **NeurX** — Agent Infrastructure & Registry
 (the "npm of agents"). Architect + product-strategist lens, reframed for the
 agentic era. Track B (vision). NOT a model marketplace — that vision is dead.

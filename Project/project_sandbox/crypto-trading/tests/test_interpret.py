@@ -25,8 +25,8 @@ class _FakeMessages:
         self._payload = payload
 
     def parse(self, **kwargs):
-        # sanity: the engine must send adaptive thinking + structured output schema
-        assert kwargs["model"].startswith("claude-")
+        # sanity: model comes from config (not hardcoded), adaptive thinking + schema sent
+        assert kwargs["model"] == CFG.llm.model
         assert kwargs["thinking"]["type"] == "adaptive"
         assert kwargs["output_format"] is LLMInterpretation
         return type("R", (), {"parsed_output": self._payload})()
@@ -54,7 +54,8 @@ def test_interpret_folds_elliott_and_fills_blocks():
     out = analyze(CFG, SYMBOL, interpret=True, llm_client=_FakeClient(_payload()))
 
     # interpretive blocks now populated
-    assert out.plan is not None and out.plan.playbook.startswith("sell-the-rip")
+    assert out.plan is not None and out.plan.playbook            # playbook is deterministic
+    assert out.plan.targets == [60000, 55000] and out.plan.r_r == 2.5  # LLM enriches targets/r_r
     assert out.summaries is not None and out.summaries.daily == "d"
     assert out.elliott is not None and out.elliott.tf_1d.current_wave == "C"
 
@@ -73,5 +74,7 @@ def test_interpret_folds_elliott_and_fills_blocks():
 @needs_data
 def test_deterministic_path_unchanged_without_interpret():
     out = analyze(CFG, SYMBOL, interpret=False)
-    assert out.plan is None and out.summaries is None and out.elliott is None
+    # deterministic plan present (playbook), but LLM-owned summaries/elliott + targets absent
+    assert out.summaries is None and out.elliott is None
+    assert out.plan is not None and out.plan.targets is None and out.plan.r_r is None
     assert not any(s.name == "elliott_1d" for s in out.signals)

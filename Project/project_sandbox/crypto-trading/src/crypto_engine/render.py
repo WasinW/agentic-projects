@@ -37,7 +37,7 @@ def to_markdown(o: Step1Output) -> str:
     if o.plan is not None:
         p = o.plan
         lines += [
-            "", "## Plan (LLM)",
+            "", "## Plan (playbook deterministic · targets/R:R via --interpret)",
             f"- playbook: **{p.playbook}**",
             f"- entry {p.entry_zone} · stop {p.stop} · targets {p.targets} · R:R {p.r_r}",
             f"- sizing: {p.sizing_note}",

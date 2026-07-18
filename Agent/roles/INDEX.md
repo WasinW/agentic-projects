@@ -1,65 +1,24 @@
-# Roles — Knowledge Index
+# Roles — Index (21 active)
 
-Deep knowledge files per role. Paired with subagents in `~/.claude/agents/`.
+แต่ละ role = atomic pair `{agent.md, knowledge.md}` — agent.md ถูก symlink เข้า `~/.claude/agents/<cat>/<name>.md` (spawn ได้ทันที) Updated 2026-07-18.
 
-## Structure
+## technical/
 
-```
-roles/
-├── technical/
-│   ├── architect/          (design + governance)
-│   ├── engineer/           (build + discuss + implement)
-│   ├── consultant/         (cloud + domain experts to consult)
-│   └── ops/                (operate + maintain)
-└── business/               (BA, domain experts, stakeholders)
-```
+- **architect/** — ai-architect, data-architect, platform-architect, solution-architect
+- **consultant/** — azure-expert (AIA-primary), databricks-expert, governance-consultant, kafka-streaming-expert (ใหม่ 2026-07-18)
+- **design/** — ui-designer, ux-designer
+- **engineer/** — ai-art-director, ai-engineer, data-analyst, de-engineer, devops-engineer, security-engineer, software-engineer
+- **ops/** — data-ops (ดูด FinOps จาก platform-ops เดิม)
 
-## How this pairs with subagents
+## business/
 
-- **Subagent** (`~/.claude/agents/<category>/<role>.md`) = the agent persona spawned via Agent tool. Lightweight system prompt + tool restriction.
-- **Knowledge file** (`~/Documents/Projects/Agent/roles/<category>/<role>/knowledge.md`) = deep reference loaded by the subagent when it needs to dig deeper.
+analyst (merge business-analyst + system-analyst), content-strategist, finance-consultant
 
-## Index
+## Retired (15 — ดู ../_archive/roles/)
 
-### Technical / Architect
-- [data-architect](technical/architect/data-architect/)
-- [solution-architect](technical/architect/solution-architect/)
-- [platform-architect](technical/architect/platform-architect/)
-- [enterprise-architect](technical/architect/enterprise-architect/)
-- [ai-architect](technical/architect/ai-architect/)
+enterprise-architect, blockchain-architect, blockchain-consultant, business-analyst, system-analyst, data-domain-expert, investment-consultant, marketing-consultant, sales-consultant, aws-expert, gcp-expert, frontend-engineer, ml-engineer, ml-ops, platform-ops — resurrect: `git mv` กลับ + symlink
 
-### Technical / Engineer
-- [de-engineer](technical/engineer/de-engineer/)
-- [ml-engineer](technical/engineer/ml-engineer/)
-- [ai-engineer](technical/engineer/ai-engineer/)
-- [devops-engineer](technical/engineer/devops-engineer/)
-- [software-engineer](technical/engineer/software-engineer/)
-- [data-analyst](technical/engineer/data-analyst/)
-- [system-analyst](technical/engineer/system-analyst/)
+## Conventions
 
-### Technical / Consultant
-- [gcp-expert](technical/consultant/gcp-expert/)
-- [aws-expert](technical/consultant/aws-expert/)
-- [azure-expert](technical/consultant/azure-expert/)
-- [governance-consultant](technical/consultant/governance-consultant/)
-
-### Technical / Ops
-- [data-ops](technical/ops/data-ops/)
-- [ml-ops](technical/ops/ml-ops/)
-- [platform-ops](technical/ops/platform-ops/)
-
-### Business
-- [business-analyst](business/business-analyst/)
-- [data-domain-expert](business/data-domain-expert/)
-
-## Convention
-
-Each role folder contains:
-```
-<role>/
-├── knowledge.md         ← deep reference (main file)
-├── decision_framework.md (optional)
-└── references.md         (optional)
-```
-
-Start with `knowledge.md` as a single file; split when it gets large.
+- Agent template: evergreen knowledge-sources block (knowledge.md fixed-path ก่อน → engagement context → RAG optional)
+- `KNOWLEDGE_CHECKLIST.md` — ใช้ตอนเขียน knowledge.md ใหม่

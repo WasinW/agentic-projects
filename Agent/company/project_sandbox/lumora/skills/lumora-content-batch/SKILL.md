@@ -1,6 +1,6 @@
 ---
 name: lumora-content-batch
-description: Generate a batch of creator posts for any LUMORA catalog (e.g. สายมู, อาหาร/สุขภาพ, ท่องเที่ยว, gadget, art...) — each post as Content × Theme × Media (per the v3 framework) with concept, hook, caption in the account's voice/archetype, image-model prompt, hashtags, and affiliate angle. Use when Sin wants to plan content, fill a calendar, brainstorm posts, or produce a weekly/30-day batch for an account.
+description: Generate a batch of creator posts for any LUMORA catalog (e.g. สายมู, อาหาร/สุขภาพ, ท่องเที่ยว, gadget, art...) — each post as Content × Theme × Media (per the v3 framework) with concept, hook, caption in the account's voice/archetype, image-model prompt, hashtags, and affiliate angle. Also covers "oracle mode" — a daily oracle/reading post (card + reflective caption + art prompt), framed as art & reflection, never prediction/medical/financial claims. Use when Sin wants to plan content, fill a calendar, brainstorm posts, produce a weekly/30-day batch, or generate a daily oracle/การ์ดวันนี้.
 ---
 
 # lumora-content-batch
@@ -45,6 +45,24 @@ Generate ready-to-produce content for the **lumora** project — catalog-agnosti
    - **Affiliate angle** — the ปักตะกร้า category tied to the Content pillar, drawn from the account's catalog (สายมู e.g. C1→เครื่องราง, C3→ยันต์/ตะกรุด, C5→น้ำมัน/ผง, C2→oracle deck, crystal…; other catalogs map to their own product lines) + a natural mention (if affiliate intent on)
    - **Format note** — production hint per Media type (single/carousel/reel beats/POV/แต่งเรื่อง)
 5. **Output** as compact, mobile-friendly per-post blocks. Lead with a one-line batch summary (account/archetype, theme, content + funnel spread).
+
+## Oracle / daily-reading post mode (folded in from `saymu-oracle`, 2026-07-18)
+
+Use this mode when the batch (or a single post) is a **daily oracle / reading** — Content pillar **C2 (ดวง / oracle)** for the สายมู catalog. Per ADR-0001 this is the **daily anchor**: consistency (a reading most days) beats sophistication for a new channel. Triggers: *"ขอ daily oracle วันนี้" / "การ์ดวันนี้"* / fill the oracle pillar (~3–5/week).
+
+**Inputs (all optional):** `theme/seed` (e.g. "ความรัก", "การงาน", "เริ่มใหม่" — else pick one) · `aesthetic` (else align with the current aesthetic-week) · `personalization` (zodiac/ราศี/birth-day → tailor the reading + a custom art angle; keep free + light in Phase 1).
+
+**Per oracle post, produce:**
+- **Card / theme** — a *single* focus (a virtue, direction, color, element, or symbolic image). Keep it open + reflective, **not deterministic**.
+- **Reading caption** — in Sin's voice (Thai-led, "fellow explorer", warm, a little playful or poetic). Structure: hook line → the card/theme → a reflective prompt or question for the reader → soft CTA (save / share / comment สิ่งที่คิด). 3–6 lines.
+- **Art prompt** — 9:16 image of the card/symbol in the chosen aesthetic (hand to `lumora-art-prompt`: subject/style/lighting/mood + aspect 9:16).
+- **Hashtags** — oracle/มู tags + dimension tags.
+- **Affiliate angle (optional)** — oracle deck, tarot, crystal, หนังสือ — only if natural.
+
+**Oracle framing rules (hard — never violate; these sharpen the global guardrails below for readings):**
+- **Frame as art, reflection, journaling prompt — NEVER prediction / fortune-guarantee / medical / financial claims.** Write *"ไพ่วันนี้ชวนให้คิดว่า…"*, not *"วันนี้คุณจะ…แน่นอน"*.
+- **Fellow explorer, not หมอดู / guru.** Invite reflection; don't dictate fate.
+- **Respectful, never fear-mongering** ("ถ้าไม่ทำจะซวย" — avoid).
 
 ## Guardrails (hard rules — never violate)
 

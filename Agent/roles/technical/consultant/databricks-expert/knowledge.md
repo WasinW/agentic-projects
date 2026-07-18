@@ -37,7 +37,7 @@ Databricks created and open-sourced the load-bearing primitives: **Apache Spark*
 | Governance | Unity Catalog is genuinely strong | UC gravity = lock-in vector |
 | Cost transparency | DBU model, serverless helps | Easy to overspend without FinOps |
 
-Strong for serious data-engineering + ML/AI shops, regulated enterprise (banking incl. The-1 / BoT / PDPA context), and anyone who outgrew a pure-warehouse story.
+Strong for serious data-engineering + ML/AI shops, regulated enterprise — current: AIA (insurance, OIC + PDPA); past engagements: SCB (banking, BoT + PDPA) / The-1 (retail loyalty, PDPA) — and anyone who outgrew a pure-warehouse story.
 
 ---
 
@@ -84,7 +84,7 @@ Truly engine-neutral, Databricks optional → external Iceberg, UC as REST catal
 
 This is the single most important architecture conversation for avoiding lock-in (§6).
 
-### Banking / regulated specific (The-1, BoT, PDPA)
+### Banking / regulated specific (past engagements: SCB banking, The-1 loyalty; current: AIA insurance — OIC + PDPA)
 
 - Unity Catalog as the single governance plane: lineage for BCBS-239-style audit, ABAC tags for PII, row/column masking for PDPA.
 - Data classification auto-labels PII → ABAC policies enforce masking at scale.
@@ -228,7 +228,7 @@ Databricks lock-in is **layered**, and the layers detach at very different costs
 | Identity | Entra ID native | IAM + SCIM | Google IAM + SCIM |
 | Storage | ADLS Gen2 | S3 | GCS |
 | Networking | VNet injection, Private Link | VPC, PrivateLink | VPC, Private Service Connect |
-| Net | Best for Microsoft-aligned/regulated (The-1 context) | Default for AWS-native | OK if GCP-committed |
+| Net | Best for Microsoft-aligned/regulated — current: AIA (insurance); past: SCB (banking) | Default for AWS-native | OK if GCP-committed |
 
 Same Lakehouse UX everywhere; feature parity is close but AWS often leads on new GA. The control plane is Databricks-hosted regardless of cloud — multi-cloud ≠ exit hatch.
 

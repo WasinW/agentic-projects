@@ -29,7 +29,8 @@ lumora/
 | 04 | [tech_backend](knowledge/04_tech_backend.md) | Multi-account AI-art pipeline + automation + data model + cost |
 | 05 | [multi_account](knowledge/05_multi_account.md) | Multi-account strategy (Sin's OWN accounts) — sequential expansion, split patterns, backend |
 | 06 | [architecture_agency](knowledge/06_architecture_agency.md) | Two-service architecture + AI-agent loop + **Agency model (NOT SaaS)** + economics + diagrams |
-| 07 | [platform_design](knowledge/07_platform_design.md) | **Buildable design** (7-specialist synthesis) — orchestrator-first, ⚙️/🤖 boundary, 3 adapter seams, local↔cloud, build path + **concept primer** 🟡 5 open Qs |
+| 07 | [platform_design](knowledge/07_platform_design.md) | **Buildable design** (7-specialist synthesis) — orchestrator-first, ⚙️/🤖 boundary, 3 adapter seams, local↔cloud, build path + **concept primer** 🟡 5 open Qs — **frozen under ADR-0001** |
+| ADR-0001 | [park-backend-2026-07-18](knowledge/adr-0001-park-backend-2026-07-18.md) | **PARK the backend, ship by hand** — adapter-build trigger (≥100 posts + >2 hr/week step), LIVE-commerce handicap, human-layer differentiation, AI labeling, no auto-publisher |
 
 ## Skills
 
@@ -47,4 +48,4 @@ Distilled from `Project/project_sandbox/session_context_export.md` (+ `_v2.md`) 
 
 ## Status
 
-Phase 1 setup. Pending: channel name, voice finalization, first 30-day batch, pricing model, on-camera decision.
+**PIVOT (2026-07-18) — 90-day content sprint; backend FROZEN.** Ship posts by hand (5 skills + Claude Code + manual posting + per-post log); codebase parked, not deleted (see [ADR-0001](knowledge/adr-0001-park-backend-2026-07-18.md)). The **Library Framework** was folded in as internal IP — canonical = [`01_creative_library.md`](knowledge/01_creative_library.md). Pending: channel name, voice finalization, archetype (weigh the LIVE-commerce handicap), first 30-day batch, on-camera decision.

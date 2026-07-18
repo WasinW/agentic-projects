@@ -1,5 +1,16 @@
 # CLAUDE.md — regent-ai (KB context)
 
+> **STATUS: PARKED as product 2026-07-18.** Regent is now a **practice + dogfood**, not a
+> product build — see [`knowledge/adr-0001-park-as-product-2026-07-18.md`](knowledge/adr-0001-park-as-product-2026-07-18.md).
+> Convert to (a) **career capital at AIA** (agent governance in a regulated insurer) and
+> (b) a **weekend dogfood** = PreToolUse policy hook + hash-chained JSONL audit on Sin's own
+> Claude Code agent fleet. **Build on Cedar/OPA — never invent a policy DSL** (novelty lives
+> above: HITL thresholds, spend caps first-class, A2A handoff trust gates, cross-vendor
+> provenance). **No product build** until the merged Track B project ("Agent Trust &
+> Governance", NeurX folded in) has **≥1 external user AND Lumora Phase-1 revenue**.
+> This is now the single Track B project; trust/provenance folded in from NeurX (killed),
+> sovereign-deployment angle folded in from SentientNet (parked). Cap: ~4 hrs/month.
+
 Project-scoped agent context for **Regent AI** — Agent Governance & Trust Layer.
 Architect + product-strategist lens, reframed for the agentic era. Track B (vision).
 NOT model explainability/ethics — that space is crowded and the vision is dead.

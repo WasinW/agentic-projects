@@ -32,6 +32,7 @@ Per-post optional: **JTBD**, **HHH funnel stage** (Hero/Hub/Help).
 
 ## Channel-count formula
 `MIN(S, A) ≤ N ≤ S × A` — S = subject/topic breadth, A = audience segment count.
+> **Correction (2026-07-18):** the lower bound is `1`, not `MIN(S,A)` — one channel can serve all S×A cells; canonical is `1 ≤ N ≤ S×A`, the V1/V2/V3 gates decide (see Lumora `01_creative_library.md`).
 Where N lands is decided by three audience gates:
 - **V1 — overlap threshold (~30%)**: segments overlapping more than this → merge.
 - **V2 — viable size (> 10K)**: below → not its own channel.

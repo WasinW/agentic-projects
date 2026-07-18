@@ -20,7 +20,8 @@ from pydantic import BaseModel, Field
 from .config import EngineConfig
 from .contract import Elliott, ElliottTF, Plan, Step1Output, Summaries
 
-MODEL = "claude-opus-4-8"
+# Model + call params live in config/engine.yaml (cfg.llm); default = claude-sonnet-5
+# (ADR 0013 — Opus was overkill for this digest-summarisation task). Never hardcoded.
 
 Dir = Literal["up", "down", "sideways"]
 Conf = Literal["low", "medium", "high"]
@@ -66,8 +67,11 @@ bias, weighted signals, support/resistance, invalidation, per-timeframe RSI/stru
 swings, MA values, and volatility regime.
 
 Your job is the INTERPRETIVE layer only:
-1. Elliott Wave per timeframe (1d most reliable; 1h is noisy -> low confidence). EW is \
-the LEAST reliable input and a SUPPORTING view only. Give a primary count + an alternate \
+1. Elliott Wave per timeframe (1d most reliable; 1h is noisy -> low confidence). Count \
+waves ONLY from the provided `pivot_series_1d` (the full chronological swing high/low \
+sequence, ~30-40 pivots) — do NOT invent pivots beyond it. If the series is too short or \
+choppy to label a clean impulse/correction, say so and set confidence low. EW is the \
+LEAST reliable input and a SUPPORTING view only. Give a primary count + an alternate \
 count. Set elliott_vote to neutral if the primary and alternate counts disagree on \
 direction, or if 1d confidence is low. Never let EW override structure/MA.
 2. daily / weekly / monthly summaries — concise, grounded ONLY in the digest.
@@ -108,10 +112,10 @@ def interpret(out: Step1Output, digest: dict, cfg: EngineConfig, client=None) ->
         + json.dumps(digest, indent=2, default=str)
     )
     resp = client.messages.parse(
-        model=MODEL,
-        max_tokens=16000,
+        model=cfg.llm.model,
+        max_tokens=cfg.llm.max_tokens,
         thinking={"type": "adaptive"},
-        output_config={"effort": "high"},
+        output_config={"effort": cfg.llm.effort},
         system=SYSTEM,
         messages=[{"role": "user", "content": user}],
         output_format=LLMInterpretation,

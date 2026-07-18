@@ -1,5 +1,12 @@
 # Regent AI — Agent Governance Landscape (2026)
 
+> **STATUS: PARKED as product 2026-07-18** — see `adr-0001-park-as-product-2026-07-18.md`.
+> Regent is now a practice + dogfood (career capital at AIA + a PreToolUse policy hook +
+> hash-chained JSONL audit on Sin's own agent fleet), not a product build. Trust/provenance
+> folded in from NeurX (`trust-provenance-from-neurx.md`); sovereign-deployment angle folded
+> in from SentientNet (`sovereign-deployment-angle.md`).
+> **This landscape rots fast (<13 months) — re-scan before trusting any positioning claim.**
+>
 > Project-specific knowledge. **Common** regulation depth (EU AI Act risk tiers, GPAI
 > obligations, PDPA, audit/lineage) lives in `roles/technical/consultant/governance-consultant`
 > and guardrail tooling in `…/engineer/ai-engineer` + `…/security-engineer` — consult those.
@@ -26,8 +33,18 @@ The 2026 stack converging in the market (validates Regent's four pillars):
 
 ## 3. Hard requirements that shape design
 
-- **EU AI Act Art. 12 — tamper-evident logging**: a plain DB is NOT compliant. Audit trail must be
-  **signed + hash-chained** (append-only, verifiable). This is a concrete architecture constraint, not a nice-to-have.
+- **EU AI Act Art. 12 — record-keeping (log integrity):** Art. 12 requires high-risk AI
+  systems to *automatically record events (logs) over their lifetime* and enable
+  post-market monitoring (retention obligation in Art. 19). It does **not** literally name
+  "hash-chaining", "signing", or "tamper-evident" as required techniques.
+  **Hash-chained + signed append-only logs are a *defensible engineering interpretation*,
+  not a literal mandate** — the tamper-evidence requirement is read into Art. 12 *together
+  with Art. 15 (accuracy, robustness & cybersecurity)*, which requires resilience against
+  unauthorised third parties altering the system's use, outputs or performance. So: logs
+  must exist + be retained (Art. 12/19) and be integrity-protected (Art. 15); hash-chaining
+  is *how we choose to satisfy that*, and it is a strong, buyer-credible interpretation —
+  **not** "the regulation says a plain DB is illegal." Claiming the literal-mandate version
+  to a compliance buyer loses credibility exactly where Regent needs it.
 - **Provenance graph**: when 5 agents collaborate (incl. cross-vendor via A2A) and one fails, you must
   reconstruct *who asked what of whom*. Ties directly to the A2A task-lifecycle (see ai-architect KB).
 - **HITL checkpoints**: approval gates at declared risk thresholds (spend caps, external-domain actions, irreversible ops).

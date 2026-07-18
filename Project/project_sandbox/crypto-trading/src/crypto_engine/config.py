@@ -125,6 +125,28 @@ class OutputCfg(BaseModel):
     write_markdown: bool = True
 
 
+class BacktestCfg(BaseModel):
+    horizons: list[int] = [1, 3, 7]      # forward-return horizons in anchor-TF bars
+    min_warmup_bars: int = 120           # skip early anchor bars lacking indicator history
+    lookback_cap: int = 800              # max bars per TF per point-in-time eval
+    # (causal indicators — Wilder RMA / EMA / rolling — converge well within this window,
+    #  so capping the slice is a pure perf lever, not a change in the signal values)
+
+
+class LLMCfg(BaseModel):
+    model: str = "claude-sonnet-5"       # interpret.py model (was hardcoded opus)
+    max_tokens: int = 16000
+    effort: Literal["low", "medium", "high"] = "high"
+
+
+class SizingCfg(BaseModel):
+    enabled: bool = True
+    risk_pct: float = 0.01               # fraction of equity risked per trade (1R)
+    equity: float = 10000.0              # account equity in quote ccy (USDT)
+    max_leverage: float = 3.0            # cap notional / equity
+    round_qty: int = 6                   # decimals for position quantity
+
+
 class EngineConfig(BaseModel):
     engine_version: str = "0.1.0"
     universe: Universe
@@ -136,6 +158,9 @@ class EngineConfig(BaseModel):
     invalidation: InvalidationCfg = Field(default_factory=InvalidationCfg)
     elliott: ElliottCfg = Field(default_factory=ElliottCfg)
     output: OutputCfg = Field(default_factory=OutputCfg)
+    backtest: BacktestCfg = Field(default_factory=BacktestCfg)
+    llm: LLMCfg = Field(default_factory=LLMCfg)
+    sizing: SizingCfg = Field(default_factory=SizingCfg)
 
 
 def load_config(path: str | Path = "config/engine.yaml") -> EngineConfig:

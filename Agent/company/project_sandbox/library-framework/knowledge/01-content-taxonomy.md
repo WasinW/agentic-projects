@@ -1,5 +1,12 @@
 # Library Framework — Content Taxonomy (C × T × M)
 
+> **⚠️ SUPERSEDED — canonical lives in Lumora (folded 2026-07-18).**
+> The authoritative version is `…/lumora/knowledge/01_creative_library.md`. This file
+> is kept **for history only**; do not edit for content. Two known drifts are **corrected
+> in the canonical** (this frozen copy still shows the old text below):
+> - **Funnel = Hero / Hub / Hygiene** — the "Hero / Hub / **Help**" below is the drift; canonical uses **Hygiene**.
+> - **Channel-count = `1 ≤ N ≤ S×A`, the V1/V2/V3 gates decide** — the `MIN(S,A) ≤ N` lower bound below is **pseudo-math** (a single channel can serve S×A; over-splitting is the solo-creator failure mode).
+
 > Project-specific IP. This is Sin's own framework, not general industry knowledge —
 > it stays here, not in `roles/`. Lumora is customer-zero; its bindings live in the
 > Lumora KB (`…/lumora/knowledge/01_creative_library.md`). Source: master §A2.

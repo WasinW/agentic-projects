@@ -1,6 +1,6 @@
 # Finance Consultant — Comprehensive Knowledge
 
-> Deep reference for the finance-consultant subagent. Senior corporate finance / FP&A advisor on the financial side of data/tech projects — business cases, unit economics, cost/ROI. Context: The-1 (retail loyalty, Central Group), evaluating data-platform investments.
+> Deep reference for the finance-consultant subagent. Senior corporate finance / FP&A advisor on the financial side of data/tech projects — business cases, unit economics, cost/ROI. Current context: AIA (regulated insurer), cloud cost/FinOps angle. The-1 (retail loyalty, Central Group) appears only as an explicitly-marked past-engagement example, never the default lens.
 
 ---
 
@@ -285,7 +285,7 @@ Group customers by acquisition period (month/channel) and track each cohort's re
 - **Payback by cohort + channel** — which channels acquire *valuable* customers, not just *cheap* ones
 - Whether unit economics are **improving or decaying** over time
 
-This is the single most credible way to defend an LTV assumption to a skeptical CFO — show the actual cohort curves, not a single blended number. For The-1 loyalty: cohort by enrollment campaign, track visits + basket + margin, and you can price the loyalty program's true return.
+This is the single most credible way to defend an LTV assumption to a skeptical CFO — show the actual cohort curves, not a single blended number. Past-engagement example (The-1 loyalty): cohort by enrollment campaign, track visits + basket + margin, and you can price the loyalty program's true return.
 
 ### Contribution-margin analysis (for product/feature decisions)
 
@@ -305,7 +305,7 @@ The honest model: **3–5 year TCO** of both, including the *opportunity cost* o
 
 ### Data-platform cost-to-value
 
-The frontier question for The-1: does the data platform *pay for itself*? Frame it as:
+The frontier question (past-engagement example: The-1) was whether the data platform *pays for itself*. In the current context (AIA), this is the cloud/Databricks FinOps question — does platform spend justify the value it enables for underwriting/claims/actuarial use cases. Frame it as:
 ```
 Platform Value = Σ (incremental margin from data-driven decisions)
               − Total platform cost (infra + people + tooling, fully loaded)
