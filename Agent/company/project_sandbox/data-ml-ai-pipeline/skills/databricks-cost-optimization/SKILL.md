@@ -23,20 +23,37 @@ this one decides *what runs where, how big, and whether it should run at all*.
 Cost attribution lives in Unity Catalog **system tables**. Always start here.
 
 ```sql
--- Top DBU spend by job over 30 days (system.billing.usage)
+-- Top DBU spend by job over 30 days (system.billing.usage). Point-in-time price join.
 SELECT u.usage_metadata.job_id,
-       SUM(u.usage_quantity)                       AS dbus,
-       SUM(u.usage_quantity * lp.pricing.default)  AS approx_usd
+       SUM(u.usage_quantity)                                    AS dbus,
+       SUM(u.usage_quantity * lp.pricing.effective_list.default) AS list_usd  -- effective_list, not default
 FROM   system.billing.usage u
 JOIN   system.billing.list_prices lp
-       ON u.sku_name = lp.sku_name AND u.usage_end_time BETWEEN lp.price_start_time
-                                        AND COALESCE(lp.price_end_time, current_timestamp())
+       ON u.sku_name = lp.sku_name AND u.cloud = lp.cloud
+      AND u.usage_start_time >= lp.price_start_time
+      AND (lp.price_end_time IS NULL OR u.usage_start_time < lp.price_end_time)
 WHERE  u.usage_date >= current_date() - INTERVAL 30 DAYS
 GROUP  BY 1 ORDER BY dbus DESC LIMIT 25;
 ```
 
 Also: `system.compute.clusters` (config), `system.compute.node_timeline` (utilization → over-provisioning).
 **Rule: optimize the top 5 cost drivers, ignore the long tail.**
+
+### 0.1 `system.billing` ≠ Azure Portal Cost Management — reconcile, don't panic
+
+They measure **different things** and are *supposed* to differ. This trips up every "why doesn't my cost query match the portal?" investigation.
+
+| | `system.billing.usage × list_prices` | Azure Cost Management (Export → ADLS) |
+|---|---|---|
+| Answers | **"who used what DBU"** (attribution) | **"what we actually paid"** (money truth) |
+| Contains | **DBU consumption only, at LIST price** | actual $ incl. **classic-compute VMs/disks/IPs**, discounts, tax |
+| For classic compute | ❌ **VM/disk NOT here** (billed separately in the workspace's **managed resource group**) | ✅ VM meter *Virtual Machines* + DBU meter *Azure Databricks* |
+
+- **Biggest gap = classic-compute VMs** (often **40–60%** of a cluster's true cost) — they live only on the Azure bill, never in `system.billing`. Serverless is closer (VM cost is bundled into the DBU price).
+- **2nd gap = list vs actual:** `effective_list` is list price; your EA/MCA/DBCU-committed rate, FX, and tax are applied only at invoicing.
+- **Reconcile DBU-meter ↔ DBU-meter, never DBU ↔ total.** Comparing the DBU query to the *whole* Databricks portal cost is the classic mistake.
+- **To approach the portal total:** add classic VM$ from the Export (join by managed-RG / cluster tag) on top of the DBU$. Authoritative $ = the **Export**; use `system.billing` for per-job/team/tag attribution.
+- **Genie LLM cost is a special case** — the 150 free DBU/user/month are pre-excluded from `system.billing`, so **do NOT subtract them**. See `databricks-genie-governance` §4.
 
 ## 1. Compute model — the biggest lever
 
@@ -127,7 +144,7 @@ A 24/7 `processingTime` stream bills a cluster around the clock even at near-zer
 > that a dashboard does not. Often: nothing.
 
 **The workaround — two scheduled Jobs (start / stop):** since *stopped = $0*, schedule the App to exist
-only during business hours. ~**76% saving** (11h x 5d = 55h/week vs 168h).
+only during business hours. **11h × 5d = 55h/week vs 168h ⇒ ~67% saving** (or ~76% with an 8h/day window).
 
 ```python
 # Job "app-start" — cron 0 8 * * MON-FRI  |  Job "app-stop" — cron 0 19 * * MON-FRI
@@ -183,6 +200,55 @@ dashboard for casual viewers, the table grant for teams that want to self-serve.
 | **Databricks App** + start/stop jobs | **~$100/mo + the warehouse** | Only if a *written policy* forbids dashboards. |
 | **Databricks App** 24/7 | **~$300/mo + the warehouse** | The accidental default. Avoid. |
 
+## 9. Tag governance & the chargeback operating model
+
+Chargeback lives or dies on tags. If clusters/warehouses run untagged, `system.billing.usage.custom_tags`
+is full of holes and the per-team query **silently under-attributes**. Enforce, don't hope.
+
+### 9.1 Enforce tags at the source
+| Compute | Enforce with |
+|---|---|
+| **Classic cluster / job** | **Cluster policy** with `custom_tags.<key>` set to `fixed` or `allowlist` → a cluster **cannot start untagged**. |
+| **Serverless notebook/job/pipeline/model-serving/Apps/Lakebase** | **Serverless usage (budget) policy** → stamps tags on serverless usage (⚠ Public Preview). |
+| **Serverless SQL warehouse + Genie** | ⚠ **NOT covered by usage policies** → **tag the warehouse object directly** (warehouse custom tags flow to `system.billing.usage`). |
+
+> **The coverage gap to say out loud:** the business-user population (dashboards + Genie on serverless
+> warehouses) is exactly the slice usage policies **don't** tag → their cost is attributed only if you tag
+> the **warehouse**. One warehouse per team, tagged `team=<t>`, is the clean answer (also caps cost — §8.2).
+
+### 9.2 Three tag surfaces — don't confuse them
+| Surface | Where it shows | Use |
+|---|---|---|
+| **custom_tags** (compute-resource + serverless-policy) | `system.billing.usage.custom_tags` | DBU attribution per team |
+| **Azure resource tags** (managed-RG VMs/disks) | Azure Cost Management Export | **classic VM** cost per team |
+| **default tags** (Vendor:Databricks, etc.) | both | the mechanism that carries your tags to the managed RG |
+
+Cluster custom tags **propagate to the managed-RG VMs/disks** — that's the join that bridges DBU
+attribution (`system.billing`) to actual VM$ (the Export). Watch: propagation **delay**, and some resource
+types reject some tags — validate one tagged cluster before trusting chargeback.
+
+### 9.3 The showback → chargeback ladder
+| Rung | What | Mechanism |
+|---|---|---|
+| **Showback** | report cost per team, no billing | `system.billing` + tags dashboard |
+| **Soft chargeback** | allocate cost to teams (still central budget) | + Azure Export for actual $, VM allocated by tag/DBU-share |
+| **Hard chargeback** | team pays its own bill | **consumer queries from THEIR own warehouse** (UC GRANT — `databricks-uc-governance-sharing` §6 option b) |
+
+### 9.4 Minimum tag taxonomy (insurer) + the reconciliation join
+Taxonomy: `cost_center · team · environment · workload · data_domain`. Flows into **both** the DBU query
+(`custom_tags`) and the Azure invoice (managed-RG resource tags).
+```sql
+-- Bridge: DBU attribution (system.billing) ⟵join⟶ actual VM$ (Cost Mgmt Export), both by team tag
+-- closes the loop §0.1 opens. Export must be ingested as a table (Topic 1 pipeline already does this).
+SELECT COALESCE(b.team, x.team) AS team,
+       b.dbu_list_usd, x.vm_actual_usd,
+       b.dbu_list_usd + x.vm_actual_usd AS approx_total
+FROM   ( /* system.billing DBU$ grouped by custom_tags['team'] */ ) b
+FULL   OUTER JOIN ( /* Export VM$ grouped by managed-RG tag team */ ) x USING (team);
+```
+
+---
+
 ## Test plan / validation
 1. **Baseline + attribute** — 30-day spend by job/cluster from system tables before any change.
 2. **A/B a change** — e.g. Photon on/off, job vs all-purpose: compare DBU + wall-clock on identical input.
@@ -195,4 +261,5 @@ dashboard for casual viewers, the table grant for teams that want to self-serve.
 - `spark-tune` — make each run faster (fewer DBUs); complementary, not overlapping.
 - `databricks-streaming-pattern` — trigger modes feeding §5.
 - `databricks-uc-governance-sharing` — the sharing model behind §8.3 (who pays / account-group GRANT).
+- `databricks-genie-governance` — Genie LLM cost + free-tier (don't subtract 150), Budgets (block only Genie), Consumer-access lockdown.
 - Escalate strategic storage/platform calls (lakehouse layout, UC migration) to `data-architect`.

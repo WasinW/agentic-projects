@@ -42,7 +42,7 @@ WORKSPACE                     ← workspace users (members, with entitlements)
 |---|---|---|
 | **Account user** | An Entra principal registered in the Databricks *account*. Not assigned to your workspace. | Open a **published dashboard URL**. Be a member of an **account group** that a GRANT resolves. **Cannot** open your workspace UI, notebooks, Genie. |
 | **Workspace user** | An account user *additionally assigned* to a workspace + given an entitlement. | Everything the entitlement allows inside *that* workspace. |
-| **Consumer access** | The lightweight "view published dashboards" surface. | View-only render: no sidebar, no nav, no drafts, no other objects. |
+| **Consumer access** | An **entitlement** (`workspace-consume`). When it's a user's SOLE entitlement, login drops them into **Genie One**. | View/run shared dashboards + Genie; can **read workspace-bound catalogs** and **see Genie Agents/Apps** (a bare account user cannot); **cannot create any object**. RLS is enforced against the viewer's identity either way — see §7 note. `databricks-genie-governance`. |
 
 **Account groups are ACCOUNT-tier.** A `GRANT ... TO \`grp\`` issued from **workspace A** resolves that
 same group when the principal queries from **workspace B** — because the grant is stored in the
@@ -55,6 +55,39 @@ same group when the principal queries from **workspace B** — because the grant
   ACCOUNT on first login** — *not to the workspace*. Exactly the mechanism you want for consumers.
 - **Entitlement-model change:** rolling out 2026-06-15 → **auto-enabled 2026-07-27 → enforced
   2026-09-14**. Coordinate with the workspace admins who own the consumers' workspaces.
+
+---
+
+## 1b. Identity operations + the entitlement-migration runbook
+
+**Provisioning — two mechanisms, don't run both blindly:**
+| | SCIM provisioning (Entra → Databricks account) | Automatic identity management |
+|---|---|---|
+| How | Entra enterprise app pushes users/groups on a schedule | Databricks resolves Entra principals on first login |
+| Default | classic | **GA default for accounts created after 2025-08-01** |
+| Wins when | you want explicit, auditable group sync + deprovisioning | you want share-to-Entra-group → auto-add to account on first login (ideal for consumers) |
+
+**The 2026 entitlement-behaviour migration — the operational runbook** (the *why* is in
+`databricks-genie-governance` §1.3; here's how to execute it safely):
+```
+Timeline: opt-in 2026-06-15 → auto-enable 2026-07-27 → enforced 2026-09-14 (no opt-out)
+Before it: the `users` system group grants Workspace access + SQL access BY DEFAULT
+           → a "consumer" silently inherits authoring rights (the lockdown breaks).
+
+RUNBOOK (do this to migrate a workspace NOW, before the cutover):
+ 1. Repoint SCIM / Terraform automation to write ACCOUNT groups, not system groups.
+    (Post-migration, writing entitlements on the `users`/`admins` system groups FAILS.)
+ 2. Remove any nesting of the `users` / `admins` system groups.
+ 3. Configure SCIM to PRESERVE the users-clone-<TS> group (else principals inheriting via it lose access).
+ 4. Opt-in the workspace to the new entitlement behaviour.
+ 5. AUDIT the clone group — it inherited the OLD broad entitlements; your biz-consumers-* groups
+    must NOT be members of it.
+ 6. Verify each consumer's SOLE entitlement is workspace-consume (no workspace-access, no sql-access).
+```
+> **Coordinate with the consumer-workspace admins** — the migration touches workspaces you may not own.
+> Verify post-migration: `databricks-genie-governance` §6 test plan.
+
+Docs: [SCIM](https://learn.microsoft.com/en-us/azure/databricks/admin/users-groups/scim/) · [entitlement migration](https://learn.microsoft.com/en-us/azure/databricks/security/auth/system-group-entitlements-migration) · [identity best practices](https://learn.microsoft.com/en-us/azure/databricks/admin/users-groups/best-practices).
 
 ---
 
@@ -112,7 +145,7 @@ returns nothing for them", check this line first.
 |---|---|---|
 | **Naming convention** | `concat('client-', lower(team_tag))` — group name derived from the data value | Fine for a PoC. Brittle: couples source-system tag hygiene (typos, renames, casing) to Entra group names. |
 | **Mapping table** ⭐ | Filter function joins a `team_tag → account_group` mapping table | **Recommended.** Decouples tag hygiene from identity. Onboarding a team = **INSERT a row**, no DDL, no redeploy. Auditable. |
-| **ABAC row-filter policies** | Attribute-based policies at catalog/schema level (GA 2025) | Best at scale — one policy governs many tables instead of one binding per table. Adopt when the table count grows past what you want to hand-bind. |
+| **ABAC row-filter policies** | Attribute-based policies at catalog/schema level (**GA 2026-05-13**; Public Preview was April 2026) | Best at scale — one policy governs many tables instead of one binding per table. Adopt when the table count grows past what you want to hand-bind. ⚠ GA carried a breaking change: views/functions over ABAC-protected tables evaluate as the **session user**, not the owner (3-month grace if contacted). |
 
 ```sql
 -- Mapping-table-driven (recommended)
@@ -228,13 +261,62 @@ Do they need to see it inside THEIR OWN workspace / their own BI tool?
 | **c** | Export/import `.lvdash.json` | Yes (as *their* dashboard) | Consumer | Yes (via UC on the table) | Template hand-off. Pairs with (b). They own the copy → drift is on them. |
 | **d** | **Delta Sharing** | Yes (as a share) | Consumer | Coarser (share-level) | **Only** for a **different metastore** or an **external org**. Same metastore → unnecessary complexity. |
 | **e** | Scheduled per-team report (PDF/Excel job) | No (email) | You (a tiny job) | By construction (query filtered per team) | Cheapest backstop when "share" means "report". |
-| — | **Genie** | — | — | — | **BLOCKED.** *"can only be granted to workspace users."* Account users cannot use it. Do not propose it. |
+| **f** | **Genie** shared to account users / Consumer access | No (URL only) | Publisher (+ LLM DBUs) | Yes (end-user data creds) | ✅ **NOT blocked** (corrected). Genie CAN be shared to *"all account users"* and applies the **end user's** data credentials, so RLS fires against the viewer. **Note:** viewing a *Genie Agent* requires **Consumer access** (a bare account user can't see it), so in practice Genie consumers get Consumer access anyway. Governance/budget/cost → `databricks-genie-governance`. (One stale doc line still says "workspace users only" — test, don't assume.) |
 
 **The compute-affinity trap (name it out loud early):** with option (a), queries run on the
 **publisher's** warehouse. **The team hosting the dashboard pays for every viewer's query.**
 For a *cost/chargeback* dashboard that is deliciously ironic — and it is exactly why (b) exists.
 Ship (a) **and** (b): the link for the casual viewer, the table grant for the team that wants to
 build their own thing and pay their own DBUs.
+
+---
+
+## 6b. Same metastore is NOT enough — the network-reachability gate
+
+A UC GRANT is a **governance/identity-layer** decision. It does **not** move data and it does **not**
+open a network path. When a consumer in **workspace B** queries a table whose files live in
+**workspace A's ADLS**, UC vends a short-lived credential and **B's own compute plane reads A's storage
+DIRECTLY** — the bytes never flow through the control plane.
+
+> **⇒ A UC grant is NECESSARY BUT NOT SUFFICIENT. The consumer's compute plane must have network
+> line-of-sight to the provider's storage account.** Governance "yes" ≠ network reachability.
+> *"Cloud storage URLs must be accessible through firewall and network controls."*
+> — [UC credential vending, Requirements](https://learn.microsoft.com/en-us/azure/databricks/external-access/credential-vending)
+
+**Failure signature — and don't confuse it with the binding trap (§4):**
+
+| Symptom | Cause | Layer |
+|---|---|---|
+| Query **errors** (403 / connectivity / timeout) | Storage firewall does not admit the consumer's compute plane | **Network** |
+| Query runs, widgets **empty, no error** | Workspace-bound catalog (§4) **or** row filter returned 0 rows | Governance |
+
+**What must be open (on the PROVIDER's ADLS Gen2 account), pick one path:**
+
+| Consumer compute | Requirement |
+|---|---|
+| **Classic (VNet-injected)** | Private endpoint from the consumer VNet → provider storage · **or** a VNet/subnet rule on the storage firewall admitting the consumer subnets · **or** peering + firewall rule. NPIP clusters. |
+| **Serverless** | Provider storage associated with a **Network Security Perimeter (NSP)** allowing the `AzureDatabricksServerless.<region>` service tag · **or** a **private endpoint** created from the consumer account's **NCC**. |
+| Both | **Same region** strongly preferred; if the storage has public access disabled, enable **"Allow Azure trusted services"** for the UC access connector. |
+
+⏰ **Serverless deprecation:** by **2026-06-09**, storage that allowlisted serverless *subnet IDs* must
+move to an **NSP + `AzureDatabricksServerless` service tag**. (`databricks-genie-governance`, `azure-expert`.)
+
+**Diagnose which layer you're stuck at** — run from a notebook in the **consumer** workspace:
+```python
+dbutils.fs.ls("abfss://<container>@<providerstorage>.dfs.core.windows.net/")
+# 403 / timeout while Catalog Explorer shows the table  → NETWORK layer (open a path above)
+# reads fine                                            → network OK; any empty result is governance
+```
+Also check first (faster, and it's governance not network): the **external-location / storage-credential
+workspace binding** — if bound only to the provider workspace, the consumer can't read even with a grant
+(Workspaces tab on the storage credential).
+
+> **Design consequence:** any cross-workspace *live* dashboard/query design (UC GRANT, export/import,
+> Delta Sharing) is dead on arrival if this path is closed — no Databricks feature routes around a
+> network policy. If it's closed and can't be opened, fall back to a **rendered artifact** delivered to
+> a person (per-team PDF/Excel job). The ask to escalate is narrow and standard: *"a private endpoint /
+> firewall rule from the consumer compute plane to the provider storage account"* — not a data-movement
+> exception.
 
 ---
 
@@ -269,12 +351,14 @@ If anyone in your org says *"we tried AI/BI and RLS didn't work / it's not secur
 certainly published on the default. That is a **config bug, not a product flaw**. Ask them
 *which publish mode*; the answer is the whole conversation.
 
-> ⚠️ **One doc contradiction to test, not to assume:** two official pages say Individual mode
-> preserves per-viewer RLS for account-member access; the AI/BI **admin capability table** shows RLS
-> as unsupported for account-member access. **Empirically test in your own tenant** with one real
-> consumer identity before you commit an architecture to it. If it fails → fall back to
-> **one dashboard per team, published with Share data permissions, on a dataset pre-filtered to that
-> team** (zero ambiguity, and the only clean way to email per-team PDFs).
+> ⚠️ **The RLS-tier question (genuinely contested in Databricks docs — do NOT assert either way):**
+> the entitlements *"Consumer access vs account users"* table shows *"view objects using row/column-level
+> security"* = ✓ for **both** Consumer access **and** bare account users; a separate AI/BI admin matrix
+> shows it ✗ for bare account users. **The docs contradict — test with one real consumer identity in your
+> tenant before committing.** What IS confirmed: bare account users **cannot** read **workspace-bound
+> catalogs** and **cannot** see **Genie Agents/Apps** → those are the solid reasons to prefer **Consumer
+> access**, not RLS. If per-viewer RLS ever fails in your test, fall back to **one dashboard per team on a
+> dataset pre-filtered to that team** (zero ambiguity, and the only clean way to email per-team PDFs).
 
 ---
 
@@ -333,7 +417,7 @@ normal and fine — it is the **metastore** that matters.)
 3. **Workspace-bound catalog ⇒ EMPTY widgets, no error.** Default workspace catalogs are bound by default.
 4. **The default publish mode leaks everything** (`embed_credentials: true`). Pin `false` in DAB.
 5. **Never email an all-teams PDF to account users** — notification destinations are not identities.
-6. **Genie is workspace-users-only** — structurally dead for external consumers.
+6. **Genie CAN be shared to account users / Consumer access** (corrected — earlier "workspace-users-only" was stale). *Seeing a Genie Agent* needs Consumer access; RLS-for-bare-account-users is doc-contested (§7 — test). See `databricks-genie-governance`.
 7. **`hive_metastore` = no RLS, no account-group functions.** Migrate first, design second.
 8. **Workspace-local groups are legacy** and do not resolve across workspaces.
 9. **Publisher pays the DBUs** for every viewer's query (see `databricks-cost-optimization`).

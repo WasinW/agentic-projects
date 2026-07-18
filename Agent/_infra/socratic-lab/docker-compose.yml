@@ -1,0 +1,19 @@
+services:
+  socratic:
+    build: .
+    image: socratic-lab
+    container_name: socratic-lab
+    environment:
+      # Your key stays in the shell, never in the image. See README.
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+    volumes:
+      # Curated knowledge bases persist on the host, not inside the image.
+      - ./data/projects:/opt/Socratic/projects
+      # Drop source docs to synthesize from here (read as immutable evidence).
+      - ./data/sources:/opt/Socratic/sources
+      # Socratic's model config (OpenRouter). Editable without a rebuild.
+      - ./.env.socratic:/opt/Socratic/.env:ro
+    ports:
+      - "3100:3000"   # web UI (npm run dev:project) -> http://localhost:3100
+    stdin_open: true
+    tty: true

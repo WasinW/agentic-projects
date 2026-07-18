@@ -1,0 +1,4 @@
+data/projects/
+data/sources/
+!data/projects/.gitkeep
+!data/sources/.gitkeep

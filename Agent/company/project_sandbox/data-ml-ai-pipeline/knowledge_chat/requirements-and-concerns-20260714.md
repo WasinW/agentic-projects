@@ -1,5 +1,12 @@
 # AIA Cost Dashboard — Requirements & Concerns (consolidated, 2026-07-14)
 
+> ## 🔄 UPDATE 2026-07-15 — R5 SPLIT (the pivot)
+> Sarunya: **"เปิด shared table ผ่าน UC ได้ — แต่ห้ามเข้า workspace dev เรา"** → the old blanket R5 was TWO things conflated. Split them:
+> - **R5-sharing** *(LIFTED)* — UC table sharing IS now allowed. The old "no share even in one metastore" is dead.
+> - **R5-network** *(STILL UNKNOWN — the make-or-break)* — does PROD's compute plane have a network path to read DEV's ADLS storage? A UC grant is governance-only; the consumer's compute reads the provider's storage **directly** → storage firewall/PE must admit it, else 403. Sin's read: "network น่าจะยังไม่เปิด แค่ governance." **PoC pending at coredata UAT.**
+> - **R5b** *(browser → DEV)* is now MOOT for the target design: D+ users open **their own** workspace, not DEV.
+> ⇒ **Option D+ is RESURRECTED as the target** (gets K3+K6 back); Artifact Factory = fallback if R5-network stays closed. See `context-20260715-vscode-uc-share-pivot.md`, `solution-d-plus-resurrection-20260718.md`, skill `databricks-uc-governance-sharing` §6b. Read everything below through this lens: many "DEAD" verdicts assumed R5-sharing was closed.
+
 > **Purpose:** one authoritative list so everyone (Sin, Sarunya, the web chat, the VS Code agents) is looking at the same picture — **before** proposing any more solutions.
 > **Status:** supersedes the constraint sets in `context-20260713-2342.md` / `solution-20260713-2342.md`. **C11 ("PROD may read the DEV catalog") was WRONG** — see R5.
 > Names are placeholders. No AIA identifiers.
