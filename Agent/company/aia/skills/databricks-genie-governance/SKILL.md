@@ -208,25 +208,21 @@ Docs: [Genie](https://learn.microsoft.com/en-us/azure/databricks/genie/) · [bes
 - **Identified users only — service principals get ZERO free tier** and are billed for all usage.
 - **Resets on the 1st.** A budget **cannot** remove the free tier.
 
-### 4.2 🚨 The trap: **do NOT subtract 150 in SQL**
+### 4.2 🚨 The trap: GROSS not net — apply a per-user free-tier floor for BILLED cost
 
-> **`system.billing.usage` appears to contain only BILLED (post-free-tier) DBUs for `GENIE`** — the 150
-> free DBU do **not** appear as billable usage. (Doc-silent on gross-vs-net; see the caveat below — validate.)
+> **`system.billing.usage` is GROSS for `GENIE`** — it records ALL Genie DBUs from the first DBU (incl. within the free tier). **Validated vs AIA tenant data (2026-07): many users with < 150 monthly Genie DBU still have rows** — which the "net" model forbids.
 
-The official Databricks canonical query computes cost straight from `SUM(usage_quantity * effective_list)` with **no free-tier term**. If you subtract 150 yourself you **double-deduct and understate** cost. Two more common errors: using `pricing.default` (use **`effective_list.default`**), and hardcoding a Genie `sku_name` (filter on `billing_origin_product='GENIE'` and **join** the SKU).
+⇒ The official Databricks canonical query (`SUM(usage_quantity * effective_list)`, no free-tier term) = **GROSS list cost** — fine for *attribution*, but it **over-states the bill** by the free-tier credit. For the **BILLED** number (what the Portal reflects), apply the free tier per user: `GREATEST(0, user_monthly_genie_dbu − 150)` — 150 pooled per **identified** user; **SPs/agents (`run_as` = UUID, not email) get NO free tier → don't subtract.** Two more common errors: using `pricing.default` (use **`effective_list.default`**), and hardcoding a Genie `sku_name` (filter on `billing_origin_product='GENIE'` and **join** the SKU).
 
-> ⚠ **Doc-silent caveat, flagged honestly:** the gross-vs-net behaviour of `system.billing.usage` is
-> not stated in official docs. "Net / do-not-subtract-150" is inferred from Databricks' own uncaveated
-> canonical query + a community Genie-usage dashboard. **Validate with data:** under the net model, a
-> user who consumed < 150 DBU in a month should have **no GENIE rows at all** that month.
+> ⚠ **Doc-silent:** gross-vs-net isn't stated in official docs. Earlier guidance said "net / don't subtract" (from the canonical query + a community dashboard) — **falsified by AIA data → treat as GROSS.** May vary by tenant/time; re-validate (under net, users < 150 DBU have no rows).
 
-### 4.3 Correct canonical SQL — billed Genie cost per user/month
+### 4.3 Canonical SQL — GROSS Genie list cost per user/month (for BILLED, apply the §4.2 per-user floor)
 ```sql
 SELECT
   date_trunc('MONTH', u.usage_date)   AS usage_month,
   u.identity_metadata.run_as          AS user_identity,      -- billed principal
   u.usage_metadata.genie.surface      AS genie_surface,      -- One / Agents / Code (informational)
-  SUM(u.usage_quantity)               AS billed_dbus,        -- already net of free tier
+  SUM(u.usage_quantity)               AS gross_dbus,         -- GROSS — for BILLED apply the §4.2 per-user floor
   SUM(u.usage_quantity * lp.pricing.effective_list.default) AS list_cost_usd
 FROM system.billing.usage u
 JOIN system.billing.list_prices lp
@@ -252,7 +248,7 @@ treat the system-table query as the per-user/per-surface **attribution** layer t
 ## 5. Gotchas
 1. **Additivity silently defeats the lockdown** — any 2nd entitlement, or pre-migration `users`-group inheritance, turns a "consumer" into an author. Migrate + audit the clone group.
 2. **Budgets block ONLY Genie/AI-Gateway LLM spend** — warehouse/classic = alert only → cap at compute config.
-3. **Do NOT subtract the 150 free tier in SQL** — it's pre-excluded from `system.billing.usage`. Subtracting understates cost.
+3. **`system.billing.usage` is GROSS (validated AIA 2026-07)** — `SUM(dbu×price)` is gross list (attribution); for BILLED cost apply a per-user floor `GREATEST(0, user_monthly_genie_dbu − 150)` (SPs/agents get no free tier). See §4.2. (Earlier "don't subtract 150 / net" was falsified by data.)
 4. **Use `pricing.effective_list.default`**, not `pricing.default`; **join** `sku_name`, don't hardcode it.
 5. **Genie is not a security boundary — UC is.** A consumer can prompt joins to any table they hold SELECT on → scope grants tightly.
 6. **Service principals get no free Genie tier** and no free-tier exemption — billed for all usage.
