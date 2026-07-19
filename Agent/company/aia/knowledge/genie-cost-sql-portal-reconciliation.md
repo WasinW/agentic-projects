@@ -13,6 +13,25 @@ Verification complete. Key results: `billing_origin_product='GENIE'` and `usage_
 > เดิมไฟล์นี้บอก *"อย่าลบ 150 (table เป็น net)"*. **AIA data พิสูจน์แล้วว่า table เป็น GROSS** — Q5 เจอ user จำนวนมากที่ Genie DBU/เดือน **< 150 แต่มี row** (0.10, 0.71, 1.16 DBU...). ภายใต้ net คนพวกนี้ต้องไม่มี row → สมมติฐาน net **falsified**.
 > ⇒ `SUM(dbu × price)` = **GROSS list (over-states บิล)** ใช้ทำ *attribution* ได้. **บิลจริง (Portal)** = หัก free tier **per-user floor**: `GREATEST(0, user_monthly_genie_dbu − 150) × price` (150 pooled ต่อ **identified user**/เดือน; **SP ไม่มี free tier** อย่าหัก). → ดู **§1b**.
 
+> ## 🔴 KEY FINDING 2026-07-19 — ทำไม system.billing ($12,355 list) ≠ Portal genie-tag ($393) ตั้ง 31× (doc-verified)
+> **ไม่ใช่ discount** (จะต้อง 97% off = เป็นไปไม่ได้). เป็น **3 funnel คูณกัน เทียบคนละ population**:
+> 1. **TAG (ตัวการหลัก)** — `databricks-product:genie` = Databricks **budget tag ไม่ใช่ Azure resource tag** → **ไม่ propagate ไป Azure Cost Management สำหรับ serverless Genie** (Azure tag propagation ทำแค่ VM/classic + serverless **usage policies** ซึ่ง doc ระบุครอบแค่ notebook/job/pipeline/model-serving → **ไม่รวม Genie + SQL warehouse**) → filter Portal ด้วย tag นี้ = จับ Genie ได้แค่เศษ. *(Databricks community official: "only model serving showed up in Azure Cost Management among the serverless products tested")*
+> 2. **SCOPE** — `system.billing` = account-wide (ทุก workspace/subscription) · Portal ที่ดู = subscription TH01 เดียว.
+> 3. **LIST→actual** — `effective_list` = list; Portal = post discount/FX/tax (~1.3–2x เท่านั้น).
+> `~3x × ~7x × ~1.5x ≈ 31x` — ไม่ต้องมี funnel เดียว 31x.
+> ✅ **ตัดออก (ไม่ใช่สาเหตุ):** price basis ($0.093/DBU ตรงกับ Genie rate publish ~$0.07 US-East + SEA premium) · free-tier/TOKEN (ทำถูกแล้ว).
+>
+> **✅ วิธีที่ถูก — reconcile `meter↔meter · account-wide↔account-wide · actual↔actual`:**
+> Azure side = **Cost Management EXPORT** → scope **whole billing account** → filter **METER** (serverless real-time inference) **ไม่ใช่ tag** → Actual, UTC month เดียวกัน · Databricks side = `SUM(Genie DBU)` **ทุก workspace** × effective_list × (1−discount). **อย่าใช้ Azure tag `databricks-product:genie` เป็น key สำหรับ serverless Genie.** Databricks-native cross-check = **Budget details page** (Unity AI Gateway, tag genie) — account-scoped.
+>
+> **📊 SQL (system.billing) vs Portal — ใช้ตัวไหนเมื่อไหร่:**
+> | คำถาม | ใช้ | เพราะ |
+> |---|---|---|
+> | Genie per-team/user/surface (chargeback) | **SQL** | ตัวเดียวที่แยก Genie ได้ (`billing_origin_product='GENIE'`) · Portal แยก Genie ไม่ได้ (share meter + tag ไม่ propagate) |
+> | ยอด $ actual รวม (finance) | **Portal/Export** (meter, account-wide) | เงินจริง (discount/FX/tax) |
+> | Genie actual $ เป๊ะต่อทีม | **ทำไม่ได้สะอาด** | best = SQL list × meter effective_rate |
+> ⇒ **Genie monitoring อิง SQL เป็นหลัก** (accept = list) · ต้อง actual → × meter effective_rate จาก Export.
+
 **BLUF — อ่านก่อนรัน:**
 จาก system tables คุณได้ **LIST-price DBU estimate** เท่านั้น. จะให้ตรง Portal เป๊ะ ต้องเอา **actual billed \$** จาก Azure Cost Management Export มา reconcile (discount / FX / tax / timing อยู่ downstream ของ system table ทั้งหมด). ข้างล่างคือ **closest-achievable + วิธี reconcile 2 ทาง**. ข่าวดีของ Genie: มัน **serverless ล้วน → ไม่มี classic-VM gap** (ต่างจาก Databricks cost ทั่วไปที่ VM หาย 40-60% ใน managed RG).
 

@@ -243,6 +243,14 @@ GROUP BY ALL
 treat the system-table query as the per-user/per-surface **attribution** layer the export can't give you.
 **Reconcile DBU-meter ↔ DBU-meter, never DBU ↔ total.** (For general — not Genie — cost, the biggest gap is classic-compute **VMs**, which are billed separately in the managed RG and never appear in `system.billing`; see `databricks-cost-optimization`.)
 
+### 4.5 🚨 Do NOT reconcile serverless Genie via an Azure resource tag (validated AIA 2026-07-19)
+
+Filtering **Azure Cost Management by tag `databricks-product:genie` badly undercounts** — that tag is a Databricks **budget** construct, **not** an Azure resource tag on the serverless Genie meter. Azure tag propagation to Cost Management is documented only for **VMs (classic)** and **serverless usage policies** — which cover notebooks/jobs/pipelines/model-serving but **NOT Genie or SQL warehouses**. (Databricks-official community: *"only model serving showed up in Azure Cost Management among the serverless products tested."*) AIA hit a **31× gap** ($12,355 system.billing-list vs $393 Portal-genie-tag) = three multiplicative funnels: **tag under-propagation × subscription-vs-account scope × list-vs-actual** — not a discount.
+
+**Correct method — reconcile `meter ↔ meter · account-wide ↔ account-wide · actual ↔ actual`:** Azure side = Cost Management **Export**, whole billing account, filter the **serverless real-time-inference meter** (NOT the tag), Actual cost, same UTC month; Databricks side = `SUM(Genie DBU)` across **ALL** `workspace_id` × effective_list.
+
+> **SQL vs Portal — which to base Genie monitoring on:** **SQL (`system.billing`) is the ONLY source that isolates Genie** (`billing_origin_product='GENIE'`) for per-team/user/surface attribution — the Portal can't (Genie shares its meter with Model Serving + Vector Search, and its tag doesn't propagate). So **Genie monitoring rides `system.billing` (list price); the actual-$ total comes from the meter-level Export**, bridged by `effective_rate = Export_meter_actual ÷ system.billing_meter_list`.
+
 ---
 
 ## 5. Gotchas
