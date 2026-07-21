@@ -1,0 +1,68 @@
+// =====================================================================================
+// Jenkinsfile.terraform — Databricks GOVERNANCE-as-code (Layer A: L1-L4 structural).
+// GENERIC TEMPLATE. plan-on-PR / apply-on-merge, SP auth from Jenkins credentials,
+// azurerm remote state, env promotion dev->uat->prod with a manual gate before prod.
+// =====================================================================================
+pipeline {
+  agent { label '<tf-agent-label>' }
+  parameters { choice(name: 'ENVIRONMENT', choices: ['dev','uat','prod'], description: 'Target env') }
+  options { timestamps(); disableConcurrentBuilds() }
+
+  environment {
+    TF_IN_AUTOMATION = 'true'
+    TF_INPUT         = 'false'
+    // Databricks SP (OAuth M2M) — governance needs account/workspace admin scope
+    DATABRICKS_HOST          = "${env.DATABRICKS_HOST}"
+    DATABRICKS_CLIENT_ID     = credentials('databricks-sp-client-id')
+    DATABRICKS_CLIENT_SECRET = credentials('databricks-sp-client-secret')
+    // azurerm backend SP (state storage) — may be a SEPARATE, infra-issued identity (least privilege)
+    ARM_CLIENT_ID       = credentials('arm-sp-client-id')
+    ARM_CLIENT_SECRET   = credentials('arm-sp-client-secret')
+    ARM_TENANT_ID       = credentials('arm-tenant-id')
+    ARM_SUBSCRIPTION_ID = credentials('arm-subscription-id')
+    ARM_USE_AZUREAD     = 'true'
+  }
+
+  stages {
+    stage('Init') {
+      steps {
+        sh '''
+          terraform init -reconfigure \
+            -backend-config="resource_group_name=<tfstate-rg>" \
+            -backend-config="storage_account_name=<tfstate-sa>" \
+            -backend-config="container_name=tfstate-${ENVIRONMENT}" \
+            -backend-config="key=databricks-governance.tfstate"
+        '''
+      }
+    }
+    stage('Validate') { steps { sh 'terraform fmt -check -recursive && terraform validate' } }
+
+    // PR: PLAN ONLY -> post the diff to the PR so a reviewer approves the actual infra change.
+    stage('Plan (PR gate)') {
+      when { changeRequest() }
+      steps {
+        sh 'terraform plan -lock-timeout=120s -var-file="envs/${ENVIRONMENT}.tfvars" -out=tfplan.bin'
+        sh 'terraform show -no-color tfplan.bin > tfplan.txt'
+        archiveArtifacts artifacts: 'tfplan.txt'
+      }
+    }
+
+    // merge to main: APPLY with promotion
+    stage('Apply dev->uat->prod') {
+      when { branch 'main' }
+      stages {
+        stage('dev')  { steps { sh 'terraform apply -auto-approve -var-file="envs/dev.tfvars"' } }
+        stage('uat')  { steps { sh 'terraform apply -auto-approve -var-file="envs/uat.tfvars"' } }
+        stage('gate') { steps { timeout(time: 1, unit: 'HOURS') {
+                          input message: 'Promote governance change to PROD?', submitter: '<approver-group>' } } }
+        stage('prod') { steps {
+                          sh 'terraform plan -var-file="envs/prod.tfvars" -out=prod.bin'
+                          sh 'terraform apply prod.bin' } }
+      }
+    }
+  }
+  post {
+    failure { echo 'Rollback: git revert the offending commit -> re-run apply. State only moves forward.' }
+    always  { sh 'rm -f tfplan.bin prod.bin || true' }
+  }
+}

@@ -1,0 +1,60 @@
+# =====================================================================================
+# databricks.yml — Databricks Asset Bundle (DAB) for the cost dashboards (Topic 2.1)
+# GENERIC TEMPLATE. No company identifiers. Deploy: databricks bundle deploy -t <target>
+#
+# WHY DAB (not manual save): the load-bearing config here — the publish mode
+# (embed_credentials:false) and the ${team_tag_key} placeholder — MUST be version-controlled,
+# not clicked. Manual save is fine only for a throwaway PoC.
+#
+# NOTE: DAB has no first-class "view" resource, so the view/control-table DDL in
+# cost_views.sql is run by a sql_task job (setup_cost_views) below.
+# =====================================================================================
+bundle:
+  name: cost-dashboards
+
+variables:
+  catalog:        { default: main }
+  gold_schema:    { default: gold }
+  gov_catalog:    { default: main }
+  team_tag_key:   { default: CostCenter }        # the generic team tag key placeholder
+  platform_group: { default: platform-finops }   # account group that sees all teams
+  warehouse_id:   { default: <serverless-sql-warehouse-id> }
+
+targets:
+  dev:  { default: true }
+  uat:  {}
+  prod: {}
+
+resources:
+  jobs:
+    setup_cost_views:                            # runs cost_views.sql (views + control tables)
+      name: setup_cost_views
+      tasks:
+        - task_key: ddl
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file:
+              path: ./cost_views.sql
+              # parameters substitute the ${...} placeholders at run time
+      # schedule optional; run on deploy or on a low cadence to pick up view changes
+
+  dashboards:
+    dept_cost:
+      display_name: departmental-cost
+      file_path: ./dept_cost.lvdash.json          # export from the UI after building visuals, then commit
+      warehouse_id: ${var.warehouse_id}
+      embed_credentials: false                    # ⭐ Individual data permissions — UI default (true) leaks every row
+    genie_cost:
+      display_name: genie-ai-cost
+      file_path: ./genie_cost.lvdash.json
+      warehouse_id: ${var.warehouse_id}
+      embed_credentials: false
+
+# REFRESH: AI/BI dashboards support scheduled cron refresh → populates a shared result cache,
+#   so N team viewers hit one cached result (this is why per-team RLS on ONE dashboard is cheap).
+#   Put the refresh warehouse on serverless SQL, auto-stop <=10min, small size. System tables lag
+#   a few hours → daily / 6-hourly refresh is plenty. Set the schedule in the dashboard's UI or JSON.
+#
+# WHO PAYS: a published dashboard runs on the PUBLISHER's warehouse — platform funds every team's
+#   browsing of their own cost. Also GRANT SELECT on v_*_priced_rls to each team's account group and
+#   hand them the .lvdash.json so they self-serve from THEIR warehouse (real chargeback). Ship both.
