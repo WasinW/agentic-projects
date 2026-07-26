@@ -76,25 +76,41 @@ WHERE is_account_group_member('${platform_group}')                 -- FinOps see
                  AND is_account_group_member(m.account_group) );
 
 -- =====================================================================================
--- DASHBOARD B base — Genie only. Free tier forces billed math at user x month grain.
+-- DASHBOARD B base — Genie only.
+-- ⭐ CORRECTED 2026-07-26 to the SKU-SPLIT model (Databricks doc `genie/monitor-cost`, 2026-07-20):
+--   Free vs billed Genie usage now land on TWO DIFFERENT SKUs — DO NOT subtract 150 anymore.
+--     * GENIE_FREE_USAGE                                = free tier (150 DBU/user/mo + One/Agents free thru 2026-07-31)
+--                                                          → NOT in list_prices (no price row)
+--     * ENTERPRISE_SERVERLESS_REAL_TIME_INFERENCE_<REGION> = billed (above the free allowance)
+--   BILLED = rows where sku_name <> 'GENIE_FREE_USAGE'.  Applying GREATEST(dbu-150,0) ON TOP would double-deduct.
+--   The 25% promo (thru 2027-01-31) is ALREADY baked into usage_quantity → multiply straight, no ×0.75.
+-- LEFT JOIN keeps free rows (they have no price → list_usd NULL) so the view carries BOTH gross + billed;
+--   split downstream with is_free_tier. (Old INNER JOIN silently dropped free rows = fragile.)
 -- =====================================================================================
 CREATE OR REPLACE VIEW ${catalog}.${gold_schema}.v_genie_priced AS
 SELECT
   date_trunc('MONTH', u.usage_date)          AS usage_month,
   u.usage_date,
   u.identity_metadata.run_as                 AS run_as,
-  u.usage_metadata.genie.surface             AS surface,     -- One/Agents/Code (under-documented — see FLAG G1)
+  u.usage_metadata.genie.surface             AS surface,     -- GENIE_ONE / GENIE_AGENTS / GENIE_CODE (FLAG G1: verify in-tenant)
   u.usage_metadata.genie.agent_id            AS agent_id,     -- populated for Agents only
+  u.sku_name,
+  (u.sku_name = 'GENIE_FREE_USAGE')          AS is_free_tier, -- ⭐ the real free/billed discriminator (NOT usage_unit)
   u.usage_quantity                           AS dbus,
-  u.usage_quantity * lp.pricing.effective_list.default AS list_usd,
-  (u.identity_metadata.run_as LIKE '%@%')    AS is_identified_user  -- '@' => human (has free tier); UUID => SP/agent (none)
+  u.usage_quantity * lp.pricing.effective_list.default AS list_usd,  -- NULL for free rows (no price row) — expected
+  (u.identity_metadata.run_as LIKE '%@%')    AS is_identified_user   -- '@' => human; UUID => SP/agent (SPs get NO free tier)
 FROM system.billing.usage u
-JOIN system.billing.list_prices lp
+LEFT JOIN system.billing.list_prices lp
   ON  u.cloud = lp.cloud AND u.sku_name = lp.sku_name
   AND u.usage_start_time >= lp.price_start_time
   AND (lp.price_end_time IS NULL OR u.usage_start_time < lp.price_end_time)
-WHERE u.billing_origin_product = 'GENIE'      -- FLAG G2: verify this value exists in your tenant
-  AND u.usage_unit = 'DBU';
+WHERE u.billing_origin_product = 'GENIE'      -- MANDATORY: SKU is shared w/ Model Serving + Vector Search (FLAG G2: confirm 'GENIE' exists in-tenant)
+  AND u.usage_unit = 'DBU';                    -- harmless guard; SKU (above) is the real discriminator
+-- ⚠️ Transition caveats: GENIE_FREE_USAGE rows only appear from 2026-07-20 (pre-date data differs);
+--    Genie One/Agents are free only thru 2026-07-31 → billed rows grow from Aug → re-validate at month boundaries.
+-- Verify in-tenant first:
+--   SELECT DISTINCT sku_name, usage_unit, usage_type, usage_metadata.genie.surface
+--   FROM system.billing.usage WHERE billing_origin_product='GENIE' ORDER BY sku_name;
 
 -- Secure view: a Genie user sees own rows + their team; platform sees all.
 CREATE OR REPLACE VIEW ${catalog}.${gold_schema}.v_genie_priced_rls AS

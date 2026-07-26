@@ -46,50 +46,52 @@ Contact point (email) → policy → test.
 
 ## PART 2 — สร้าง Alert Rule
 
+> ⚠️ **verified 2026-07-26:** Grafana ปัจจุบัน (v11/v12) หน้า New alert rule เป็น **stepped wizard 6 step** —
+> ทำไล่ตามนี้ (ชื่อ section เก่าอย่าง "Set evaluation behavior" / "Add annotations" **ไม่มีแล้ว**):
+> 1) Set alert rule name · 2) Define query and condition · 3) Set folder and labels ·
+> 4) Configure alert evaluation behavior · 5) Configure notifications · 6) Configure notification message
+> **(annotations + Link dashboard/panel ย้ายไปอยู่ step 6 แล้ว)**
+
 1. ซ้ายมือ → **Alerting** → **Alert rules** → **+ New alert rule**
 
-### 2.1 ตั้งชื่อ + query
-2. **Name**: `Kafka Connect reconcile failing (PROD)`
-3. section **Define query and alert condition**:
-   - **Query A** (datasource Prometheus PROD), แบบ **instant**:
-     ```promql
-     sum(increase(strimzi_reconciliations_failed_total{kind="KafkaConnect", namespace="nsp-th-p-kafka"}[5m]))
-     ```
-     > 💡 **ตัด `> 0` ออกจาก query** แล้วไปใส่เป็น threshold แทน (ข้อ 2.2) — จะได้ไม่เจอปัญหา No Data ตอนไม่มี failure
+### Step 1 — Set alert rule name
+- **Name**: `Kafka Connect reconcile failing (PROD)`
 
-### 2.2 ตั้ง condition (threshold)
-4. ในส่วน **Alert condition** (expressions ด้านล่าง query):
-   - **B = Reduce**: Function = **Last**, Input = **A** (ยุบ time series เหลือค่าเดียว)
-   - **C = Threshold**: Input = **B**, condition = **IS ABOVE `0`**
-   - กดปุ่มให้ **C** เป็น **Alert condition** (จุดสีน้ำเงิน "Set as alert condition")
-   > = "ถ้าจำนวน reconcile-fail ใน 5 นาที > 0 → firing"
+### Step 2 — Define query and condition
+- **Query A** (datasource Prometheus PROD), แบบ **instant**:
+  ```promql
+  sum(increase(strimzi_reconciliations_failed_total{kind="KafkaConnect", namespace="nsp-th-p-kafka"}[5m]))
+  ```
+  > 💡 **ตัด `> 0` ออกจาก query** แล้วใส่เป็น threshold แทน — กัน No Data ตอนไม่มี failure
+- Grafana **auto-add expression** ให้: **B = Reduce** (Function = **Last**, Input = **A**) → **C = Threshold** (Input = **B**, **IS ABOVE `0`**)
+- กด **Set as alert condition** ที่ **C** (= "reconcile-fail ใน 5 นาที > 0 → firing")
 
-### 2.3 evaluation (ความถี่เช็ค)
-5. section **Set evaluation behavior**:
-   - **Folder**: สร้าง/เลือก folder เช่น `Kafka Alerts`
-   - **Evaluation group**: สร้างใหม่ชื่อ `kafka-1m` → **Evaluation interval** = `1m` (เช็คทุก 1 นาที)
-   - **Pending period**: `0s` (ยิงทันที) หรือ `5m` (ต้อง fail ต่อเนื่อง 5 นาทีก่อนยิง = กัน noise) — แนะนำ `5m` สำหรับ prod
+### Step 3 — Set folder and labels
+- **Folder**: สร้าง/เลือก `Kafka Alerts`
+- **Labels** (ใช้ route + โชว์ใน mail): กด **+ Add label** → `severity=critical` · `team=data-platform` · `component=kafka-connect`
 
-### 2.4 labels + annotations (นี่คือส่วนที่ทำให้ email มีรายละเอียด)
-6. section **Configure labels and notifications**:
-   - **Labels** (ใช้ route + แสดงใน mail): กด **+ Add label**
-     - `severity` = `critical`
-     - `team` = `data-platform`
-     - `component` = `kafka-connect`
-7. section **Add annotations** (นี่คือ "เนื้อความ" ที่จะโชว์ใน email):
-   - **summary** =
-     ```
-     Kafka Connect reconcile FAILING in {{ $labels.namespace }}
-     ```
-   - **description** =
-     ```
-     KafkaConnect {{ $labels.name }} ({{ $labels.kind }}) in namespace {{ $labels.namespace }} — reconcile-failed count in the last 5m = {{ $values.B }}. Check the Strimzi operator log + Connect pods (kubectl get pods -n {{ $labels.namespace }}).
-     ```
-     > `{{ $values.B }}` = ค่าจาก Reduce B. `{{ $labels.xxx }}` = label จาก metric.
-8. **🔗 Link dashboard and panel** (ปุ่มในหน้านี้ — สำคัญสำหรับ deep-link):
-   - กด **Link dashboard and panel** → เลือก dashboard `Kafka Connect Health` → panel `Connect reconcile failures (5m)`
-   - Grafana จะใส่ annotation ซ่อน `__dashboardUid__` + `__panelId__` ให้ → **email จะมีปุ่ม link ตรงมาที่ panel นี้อัตโนมัติ**
-9. **Save rule and exit** (บนขวา)
+### Step 4 — Configure alert evaluation behavior
+- **Evaluation group**: สร้างใหม่ `kafka-1m` → **Evaluation interval** = `1m`
+- **Pending period**: `5m` (fail ต่อเนื่อง 5 นาทีก่อนยิง = กัน noise)
+- **Configure no data and error handling** → **"Alert state if no data or all values are null"** = **Normal**
+  > อย่าเลือก Alerting (จะยิงตอนไม่มี data). ค่านี้เมื่อก่อนชื่อ "OK" — ตอนนี้คือ **Normal**
+
+### Step 5 — Configure notifications
+- เลือก **contact point** = email ของคุณ — หรือปล่อยให้ **notification policy** route ตาม label (step 3) ดู PART 4
+
+### Step 6 — Configure notification message (annotations + deep-link)
+- **Summary** =
+  ```
+  Kafka Connect reconcile FAILING in {{ $labels.namespace }}
+  ```
+- **Description** =
+  ```
+  KafkaConnect {{ $labels.name }} ({{ $labels.kind }}) in namespace {{ $labels.namespace }} — reconcile-failed count in last 5m = {{ $values.B.Value }}. Check the Strimzi operator log + Connect pods (kubectl get pods -n {{ $labels.namespace }}).
+  ```
+  > ⚠️ ใช้ **`{{ $values.B.Value }}`** (`.Value` = ตัวเลขจริง) — ถ้าเขียน `{{ $values.B }}` เฉยๆ จะได้ทั้ง struct ไม่ใช่ตัวเลข. `{{ $labels.xxx }}` = label จาก metric
+- **🔗 Link dashboard and panel** (ปุ่มอยู่ใน step 6 นี้ — ไม่ใช่ข้างๆ query): เลือก dashboard `Kafka Connect Health` → panel `Connect reconcile failures (5m)` → Grafana ใส่ annotation `__dashboardUid__`/`__panelId__` ให้ → **email มีปุ่ม link ตรงมา panel อัตโนมัติ** (ทำให้ `.PanelURL`/`.DashboardURL` มีค่า)
+
+**Save rule** (บนขวา)
 
 ---
 
@@ -104,11 +106,11 @@ Contact point (email) → policy → test.
 ### 3.2 (ทางลัด — แนะนำ) ปล่อย body เป็น default แต่ใส่ annotation ให้ดี
 Grafana **default email template** โชว์ให้อยู่แล้ว: alert name, **summary + description** (จาก PART 2.4),
 labels, ค่า values, ปุ่ม **View alert rule**, และ (เพราะเรา link panel) ปุ่ม **Go to dashboard / panel**.
-→ **แค่ทำ PART 2.4 + 2.8 ให้ครบ email ก็มีรายละเอียด + link ครบแล้ว** โดยไม่ต้องเขียน template เอง
+→ **แค่ทำ Step 6 (annotations + Link panel) ให้ครบ email ก็มีรายละเอียด + link ครบแล้ว** โดยไม่ต้องเขียน template เอง
 
 ### 3.3 (ทางลึก — optional) custom subject + body
 ถ้าอยากคุม format เอง:
-1. **Alerting** → **Contact points** → tab **Notification templates** → **+ New template**
+1. **Alerting** → **Contact points** → tab **Templates** → **+ Add notification template** (เมื่อก่อนชื่อ "Notification templates / New template")
 2. Name = `kafka_email` → เนื้อหา:
    ```gotemplate
    {{ define "kafka.subject" }}[{{ .Status | toUpper }}] Kafka Connect issue — {{ .CommonLabels.namespace }}{{ end }}
@@ -161,11 +163,13 @@ labels, ค่า values, ปุ่ม **View alert rule**, และ (เพร
 ## PART 6 — Query สำรอง + companion alert (แนะนำเพิ่ม)
 
 ### 6.1 Fallback: จับ "Connect ไม่ ready / ดับ" ตรงๆ (ตามที่คุณคิดไว้)
-ถ้า reconcile-failed ไม่เวิร์ค ใช้ query นี้แทน (Connect resource ที่ไม่ ready):
+> ⚠️ **verified 2026-07-26 แก้ query:** `strimzi_ready_resources` **ไม่มีจริง** (metric นี้ไม่มีใน Strimzi).
+> metric ที่ถูกคือ **`strimzi_resource_state`** (ค่า 1=ready, 0=not-ready ต่อ resource).
 ```promql
-strimzi_resources{kind="KafkaConnect"} - strimzi_ready_resources{kind="KafkaConnect"}
+count(strimzi_resource_state{kind="KafkaConnect"} == 0)
 ```
 - threshold **IS ABOVE `0`** = มี Connect resource ที่ไม่ ready
+- (หรือดูรายตัว: `strimzi_resource_state{kind="KafkaConnect"} == 0`)
 - **ข้อดี**: จับ "ดับ/ไม่พร้อม" ตรงกว่า reconcile-failed (ซึ่งเป็น effect-level)
 - ทำ alert rule อีกตัวแบบ PART 2 เปลี่ยนแค่ query A
 
@@ -176,12 +180,17 @@ absent(strimzi_reconciliations_periodical_total{namespace="nsp-th-p-kafka"})
 - threshold **IS ABOVE `0`** (absent คืนค่า 1 เมื่อ metric หาย = operator ตาย/ไม่ scrape)
 - **ทำไมต้องมี**: ถ้า operator pod ตายสนิท metric จะหายไปเลย → `increase()` เงียบ → **ตัวนี้ยังยิงได้**
 
+### 6.3 ⚠️ Strimzi operator metrics = deprecated (วางแผน migrate)
+- **`strimzi_*` operator metrics (reconciliations, resource_state) ถูก deprecate ตั้งแต่ Strimzi 0.48.0 และ ถูกลบใน 0.51.0** → หลัง operator upgrade alert พวกนี้จะ **เงียบเงียบ (No Data)**
+- long-term = ย้ายไป **kube-state-metrics** (`kube_pod_status_ready` / `kube_pod_container_status_restarts_total`) — ตรงกับ Phase 4 ใน `observability-synthesis.md`
+- interim ใช้ `strimzi_*` ไปก่อนได้ แต่ **เช็ค Strimzi version + ตั้ง reminder** ว่าจะ migrate ก่อน upgrade ข้าม 0.51
+
 ---
 
 ## Appendix — gotcha + troubleshooting
 - **label ต้องเป๊ะ**: `namespace` / `exported_namespace` / `kind` / `name` — **ไม่ใช่** `kubernetes_namespace` (ผิด = No Data เงียบ)
-- **No Data ตอนปกติ**: ถ้าใช้ `... > 0` ใน query โดยตรง ตอนไม่มี fail จะได้ empty → Grafana งงว่า No Data. **แก้**: ตัด `>0` ออก ใช้ Threshold expression แทน (PART 2.2) + ตั้ง **"Alert state if no data" = OK/Normal** ใน rule settings
-- **email ไม่มี link panel**: ต้องกด **Link dashboard and panel** ใน alert rule (PART 2.8) `.PanelURL` ถึงจะมีค่า
+- **No Data ตอนปกติ**: ถ้าใช้ `... > 0` ใน query โดยตรง ตอนไม่มี fail จะได้ empty → No Data. **แก้**: ตัด `>0` ออก ใช้ Threshold expression (Step 2) + ตั้งใน **Step 4 → "Configure no data and error handling" → "Alert state if no data or all values are null" = Normal** (ค่าเก่าชื่อ "OK")
+- **email ไม่มี link panel**: ต้องกด **Link dashboard and panel** ใน **Step 6** ก่อน `.PanelURL` ถึงจะมีค่า
 - **counter reset**: ถ้า operator restart, counter รีเซ็ต → `increase()` อาจ miss → นี่คือเหตุผลต้องมี companion 6.2
 - **Grafana version**: ชื่อเมนูอาจต่างเล็กน้อย (v9 vs v11) — หลักการเดียวกัน (rule → condition → eval → labels/annotations → link panel → contact point → policy)
 - **PROD-only**: Grafana เห็นแค่ PROD Prometheus; UAT ต้องขอ endpoint จาก network team (ดู obs synthesis)
