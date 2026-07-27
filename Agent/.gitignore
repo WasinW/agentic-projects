@@ -8,3 +8,7 @@ _infra/qdrant_storage/
 
 # os
 .DS_Store
+
+# saved web pages (raw) — keep local, do not track
+company/aia/_inbox/google_ai_chat/*.html
+**/*_files/
