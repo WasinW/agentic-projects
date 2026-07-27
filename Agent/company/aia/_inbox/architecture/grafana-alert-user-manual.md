@@ -63,8 +63,9 @@ Contact point (email) → policy → test.
   sum(increase(strimzi_reconciliations_failed_total{kind="KafkaConnect", namespace="nsp-th-p-kafka"}[5m]))
   ```
   > 💡 **ตัด `> 0` ออกจาก query** แล้วใส่เป็น threshold แทน — กัน No Data ตอนไม่มี failure
-- Grafana **auto-add expression** ให้: **B = Reduce** (Function = **Last**, Input = **A**) → **C = Threshold** (Input = **B**, **IS ABOVE `0`**)
+- Grafana **auto-add expression** ให้ (ถ้าไม่มี กด **+ Add expression** สร้างเอง): **B = Reduce** (Function = **Last**, Input = **A**) → **C = Threshold** (Input = **B**, **IS ABOVE `0`**)
 - กด **Set as alert condition** ที่ **C** (= "reconcile-fail ใน 5 นาที > 0 → firing")
+  > 👆 **นี่แหละ "ใส่เป็น threshold แทน"** — `>0` ที่ตัดออกจาก query มาอยู่ที่ **expression C (IS ABOVE 0)** นี่เอง
 
 ### Step 3 — Set folder and labels
 - **Folder**: สร้าง/เลือก `Kafka Alerts`
@@ -72,6 +73,7 @@ Contact point (email) → policy → test.
 
 ### Step 4 — Configure alert evaluation behavior
 - **Evaluation group**: สร้างใหม่ `kafka-1m` → **Evaluation interval** = `1m`
+  > ℹ️ **evaluation group = แค่ "เช็คทุกกี่นาที" + รันเรียงกัน** — rule ในกลุ่มเดียวกัน **ไม่ impact logic กัน** (แต่ละ rule query อิสระ). เอา Kafka alert หลายตัวไว้กลุ่มเดียวได้ปลอดภัย. **อย่าสับสนกับ "Group by" ใน Notification policy** (อันนั้น = รวม alert เป็น mail เดียว คนละเรื่อง)
 - **Pending period**: `5m` (fail ต่อเนื่อง 5 นาทีก่อนยิง = กัน noise)
 - **Configure no data and error handling** → **"Alert state if no data or all values are null"** = **Normal**
   > อย่าเลือก Alerting (จะยิงตอนไม่มี data). ค่านี้เมื่อก่อนชื่อ "OK" — ตอนนี้คือ **Normal**
@@ -148,6 +150,17 @@ labels, ค่า values, ปุ่ม **View alert rule**, และ (เพร
    - **Contact point** = email ของคุณ
    - (optional) **Group by** = `alertname, namespace`; **Group wait** `30s`, **Group interval** `5m`, **Repeat interval** `4h` (กัน spam)
 4. **Save policy**
+
+### 4.1 อยากได้ "ส่ง mail ครั้งเดียวหลัง fail" (ไม่ spam)
+Grafana ส่ง mail ตอนเข้า **Firing** ครั้งแรก แล้ว **ส่งซ้ำทุก "Repeat interval"** ตราบใดที่ยัง firing → ตั้ง 3 อย่างนี้:
+| ตั้งที่ | ค่า | ผล |
+|---|---|---|
+| **Pending period** (Step 4 ของ rule) | `0s` | ยิงทันทีที่ fail |
+| **Repeat interval** (policy นี้) | `4h`+ | ระหว่าง firing ไม่ส่งซ้ำถี่ |
+| **Disable resolved message** (Email contact point → Optional settings) | ✅ | ไม่ส่ง "หายแล้ว" mail → เหลือแค่ mail ตอน fail |
+
+- เพราะ query ใช้ `increase(...[5m])` → หลัง fail มันจะ >0 อยู่ ~5 นาที แล้วตกกลับ 0 เอง → firing สั้นๆ → **1 fail = 1 mail** (Repeat 4h > 5m เลยไม่ทันส่งซ้ำ)
+- fail รัวๆ (crash loop) → firing ค้างยาว = **ยังได้ mail เดียวต่อ incident** (จะซ้ำก็ต่อเมื่อค้างเกิน 4h)
 
 ---
 
