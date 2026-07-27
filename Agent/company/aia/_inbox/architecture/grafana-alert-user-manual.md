@@ -60,12 +60,15 @@ Contact point (email) → policy → test.
 ### Step 2 — Define query and condition
 - **Query A** (datasource Prometheus PROD), แบบ **instant**:
   ```promql
-  sum(increase(strimzi_reconciliations_failed_total{kind="KafkaConnect", namespace="nsp-th-p-kafka"}[5m]))
+  sum by (kind, namespace, name) (increase(strimzi_reconciliations_failed_total{kind="KafkaConnect", namespace="nsp-th-p-kafka"}[5m]))
   ```
+  > ⚠️ **ต้องมี `by (kind, namespace, name)`** — ถ้าใช้ `sum(...)` เฉยๆ มัน**ตัด label ทิ้งหมด** → `{{ $labels.namespace }}` ใน mail จะเป็น **[no value]**. `by (...)` = เก็บ label ไว้
   > 💡 **ตัด `> 0` ออกจาก query** แล้วใส่เป็น threshold แทน — กัน No Data ตอนไม่มี failure
-- Grafana **auto-add expression** ให้ (ถ้าไม่มี กด **+ Add expression** สร้างเอง): **B = Reduce** (Function = **Last**, Input = **A**) → **C = Threshold** (Input = **B**, **IS ABOVE `0`**)
-- กด **Set as alert condition** ที่ **C** (= "reconcile-fail ใน 5 นาที > 0 → firing")
-  > 👆 **นี่แหละ "ใส่เป็น threshold แทน"** — `>0` ที่ตัดออกจาก query มาอยู่ที่ **expression C (IS ABOVE 0)** นี่เอง
+- **2 โหมด (refId ต่างกัน — สำคัญตอนใส่ `$values` ใน Step 6):**
+  - **Simple mode** (Advanced options = ปิด): มีแค่ **A (query) + C (condition "IS ABOVE 0")** → **ไม่มี B** → ใน annotation ใช้ **`{{ $values.A.Value }}`**
+  - **Advanced mode** (เปิด): **A (query) → B (Reduce Last) → C (Threshold IS ABOVE 0)** → ใช้ **`{{ $values.B.Value }}`**
+  > 👉 ยึด refId ที่ mail โชว์ในบรรทัด **"Value: A=0, C=1"** — ตัวเลข fail อยู่ที่ **A** (simple) หรือ **B** (advanced). `> 0` ย้ายมาอยู่ที่ Threshold นี่เอง
+- กด **Set as alert condition** ที่ **C**
 
 ### Step 3 — Set folder and labels
 - **Folder**: สร้าง/เลือก `Kafka Alerts`
@@ -84,13 +87,34 @@ Contact point (email) → policy → test.
 ### Step 6 — Configure notification message (annotations + deep-link)
 - **Summary** =
   ```
-  Kafka Connect reconcile FAILING in {{ $labels.namespace }}
+  🔴 Kafka Connect reconcile FAILED — {{ $labels.namespace }}/{{ $labels.name }} (count={{ $values.A.Value }})
   ```
-- **Description** =
+- **Description** (self-contained — เปิด mail รู้เรื่องเลย ไม่ต้องพึ่ง link) =
   ```
-  KafkaConnect {{ $labels.name }} ({{ $labels.kind }}) in namespace {{ $labels.namespace }} — reconcile-failed count in last 5m = {{ $values.B.Value }}. Check the Strimzi operator log + Connect pods (kubectl get pods -n {{ $labels.namespace }}).
+  WHAT : KafkaConnect "{{ $labels.name }}" (kind={{ $labels.kind }}) in namespace {{ $labels.namespace }}
+         reconcile-failed count (window) = {{ $values.A.Value }}
+  LEVEL: {{ $labels.severity }} | team={{ $labels.team }} | component={{ $labels.component }}
+
+  MEANING: Strimzi operator reconcile ล้มเหลว. สาเหตุที่เจอบ่อย:
+    - Connect pod boot ไม่ทัน (plugin/JAR โหลดช้า → readiness timeout 600000ms)
+    - CoreDNS/DNS ล่ม (operator resolve ไม่ได้ → createOrUpdate failed)
+    - broker/dependency ไม่พร้อม
+
+  INVESTIGATE (copy-paste):
+    kubectl get pods -n {{ $labels.namespace }} | grep -i connect
+    kubectl get kafkaconnect -n {{ $labels.namespace }}
+    kubectl describe kafkaconnect {{ $labels.name }} -n {{ $labels.namespace }}
+    kubectl logs deploy/strimzi-cluster-operator -n {{ $labels.namespace }} --tail=100 | grep -iE "reconcil|{{ $labels.name }}|error|timeout|dns"
+    kubectl get events -n {{ $labels.namespace }} --sort-by=.lastTimestamp | tail -30
+
+  FIX HINT:
+    - boot timeout → bake plugin เข้า image / เพิ่ม pod-ready timeout
+    - CoreDNS → escalate infra/network
+    - stop+resume = กลบชั่วคราว (ไม่ใช่ fix)
   ```
-  > ⚠️ ใช้ **`{{ $values.B.Value }}`** (`.Value` = ตัวเลขจริง) — ถ้าเขียน `{{ $values.B }}` เฉยๆ จะได้ทั้ง struct ไม่ใช่ตัวเลข. `{{ $labels.xxx }}` = label จาก metric
+  > ⚠️ **`$values.A` = simple mode / `$values.B` = advanced mode** (ยึด refId ใน mail บรรทัด "Value:"). ใส่ `.Value` เสมอ. ตัดทศนิยม: `{{ printf "%.0f" $values.A.Value }}`
+  > ⚠️ ถ้า `{{ $labels.xxx }}` เป็น **[no value]** = query ไม่ได้ใส่ `by (kind, namespace, name)` (ดู Step 2)
+  > 💡 self-contained แบบนี้ = **ไม่ต้องพึ่ง link** (แก้ปัญหา localhost ไปในตัว) — เปิด mail แล้ว copy คำสั่งไป investigate ได้เลย
 - **🔗 Link dashboard and panel** (ปุ่มอยู่ใน step 6 นี้ — ไม่ใช่ข้างๆ query): เลือก dashboard `Kafka Connect Health` → panel `Connect reconcile failures (5m)` → Grafana ใส่ annotation `__dashboardUid__`/`__panelId__` ให้ → **email มีปุ่ม link ตรงมา panel อัตโนมัติ** (ทำให้ `.PanelURL`/`.DashboardURL` มีค่า)
 
 **Save rule** (บนขวา)
@@ -144,6 +168,7 @@ labels, ค่า values, ปุ่ม **View alert rule**, และ (เพร
 ## PART 4 — Notification Policy (route alert → email)
 
 1. **Alerting** → **Notification policies**
+   > 📍 **หา "Repeat interval" ไม่เจอ?** อยู่ในนี้ → กด **Edit** ที่ policy → เปิด section **"Timing options"** (พับไว้ default) → เจอ Group wait / Group interval / **Repeat interval**. ถ้าเป็น **nested policy** ต้องติ๊ก **"Override general timings"** ก่อนช่องถึงโผล่ (ไม่งั้น inherit จาก default). **Repeat interval ตั้งที่ policy ไม่ใช่ที่ rule**
 2. ทางง่าย: แก้ **Default policy** → **Default contact point** = email ของคุณ (ครอบทุก alert)
 3. ทางเจาะจง (แนะนำ): **+ New nested policy**
    - **Matching labels**: `team = data-platform` (ตรงกับ label ใน PART 2.6)
@@ -161,6 +186,17 @@ Grafana ส่ง mail ตอนเข้า **Firing** ครั้งแรก
 
 - เพราะ query ใช้ `increase(...[5m])` → หลัง fail มันจะ >0 อยู่ ~5 นาที แล้วตกกลับ 0 เอง → firing สั้นๆ → **1 fail = 1 mail** (Repeat 4h > 5m เลยไม่ทันส่งซ้ำ)
 - fail รัวๆ (crash loop) → firing ค้างยาว = **ยังได้ mail เดียวต่อ incident** (จะซ้ำก็ต่อเมื่อค้างเกิน 4h)
+
+### 4.2 (TRIAL) ส่ง mail ทุกๆ X ชม. ดู status — แม้ยังไม่พัง (heartbeat)
+ช่วงแรกอยากเห็น mail เรื่อยๆ เพื่อเช็คว่า format/alert ทำงาน (ไม่ต้องรอให้พังจริง) → ทำให้ **firing ตลอด** + repeat:
+| ตั้งที่ | Phase A (ทุก 1h) | Phase B (4-12h) | Phase C = real design |
+|---|---|---|---|
+| Threshold C | **IS ABOVE `-1`** (จริงเสมอ) | IS ABOVE `-1` | **IS ABOVE `0`** (พังจริงเท่านั้น) |
+| Repeat interval | `1h` | `4h`–`12h` | `4h`+ |
+| Pending period | `0s` | `0s` | `0s` |
+| Disable resolved | — | — | ✅ |
+- Description ใส่ `{{ $values.B.Value }}` → mail บอก "failures ตอนนี้ = 0/N" ทุกครั้ง (แนะนำเปลี่ยน query window เป็น `[1h]` ให้ตรง cadence)
+- ⚠️ **`IS ABOVE -1` (always-firing) = trial เท่านั้น** (แดงตลอด) → พอมั่นใจ format แล้ว **สลับกลับ Phase C (`IS ABOVE 0`)** อย่าทิ้งไว้ (จะชินชา ignore)
 
 ---
 
@@ -201,6 +237,12 @@ absent(strimzi_reconciliations_periodical_total{namespace="nsp-th-p-kafka"})
 ---
 
 ## Appendix — gotcha + troubleshooting
+- **`[no value]` ใน mail — 2 สาเหตุ:** (a) `{{ $labels.x }}` ว่าง = query ใช้ `sum(...)` เฉยๆ ตัด label ทิ้ง → ใส่ `sum by (kind, namespace, name) (...)`; (b) `{{ $values.B.Value }}` ว่าง = คุณอยู่ **simple mode** (ไม่มี refId B) → ใช้ **`$values.A.Value`** (ยึด refId ใน mail บรรทัด "Value:")
+- **link เป็น `localhost:3000` เข้าไม่ได้:** Grafana ไม่ได้ตั้ง `root_url` → default localhost.
+  - **แก้ถาวร (proper):** `grafana.ini [server] root_url = https://<domain>/` (หรือ env `GF_SERVER_ROOT_URL`) → **แก้ config + restart Grafana** (ไม่ใช่ rebuild; ใน K8s = แก้ ConfigMap/Helm/env → `kubectl apply` → pod restart). **แก้ผ่าน GUI ไม่ได้** (startup config). งาน admin/infra; กระทบทุก link ที่ Grafana สร้าง
+  - **workaround (ไม่รอ admin):** (1) ทำ email **self-contained** — ยัด namespace/name/value + คำสั่ง `kubectl` ลง Description ให้ครบ ไม่ต้องพึ่ง link; (2) ถ้ารู้ URL จริงของ Grafana → **Add custom annotation** ใส่ full URL hardcode เช่น `dashboard_link = https://<domain-จริง>/d/<uid>` (bypass root_url เฉพาะ link นั้น)
+  - **log ใส่ใน mail ตรงๆ ไม่ได้** (alert นี้ query Prometheus = metric ไม่มี log) → ใส่คำสั่งไปดึง log แทน (`kubectl logs ...`)
+- **email มี Value/Labels/Source/Silence เยอะ = default template ของ Grafana เอง** (ไม่ใช่ custom ที่คุณตั้ง) — ปกติ. อยากสั้น/สะอาด → ทำ custom notification template (PART 3.3)
 - **label ต้องเป๊ะ**: `namespace` / `exported_namespace` / `kind` / `name` — **ไม่ใช่** `kubernetes_namespace` (ผิด = No Data เงียบ)
 - **No Data ตอนปกติ**: ถ้าใช้ `... > 0` ใน query โดยตรง ตอนไม่มี fail จะได้ empty → No Data. **แก้**: ตัด `>0` ออก ใช้ Threshold expression (Step 2) + ตั้งใน **Step 4 → "Configure no data and error handling" → "Alert state if no data or all values are null" = Normal** (ค่าเก่าชื่อ "OK")
 - **email ไม่มี link panel**: ต้องกด **Link dashboard and panel** ใน **Step 6** ก่อน `.PanelURL` ถึงจะมีค่า
