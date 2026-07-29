@@ -1,0 +1,5 @@
+# local-rag-agent — 100% local, ไม่มี server
+numpy
+requests                 # เรียก Ollama /api/chat
+sentence-transformers    # โหลด e5-small / bge-m3 (ลาก torch + transformers มาด้วย)
+pythainlp                # tokenizer ไทยให้ BM25 ทำงาน — ถ้าไม่ลง ไทยจะถูกรวบเป็นก้อนเดียว
