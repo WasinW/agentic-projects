@@ -35,7 +35,7 @@ QDRANT_HOST = "localhost"
 QDRANT_PORT = 6333
 
 # Folders to skip (any "_"-prefixed path part is also skipped — see is_skipped)
-SKIP_DIRS = {".git", "node_modules", "qdrant_storage", "archive", "knowledge_base_legacy", "memory", "bak_mem"}
+SKIP_DIRS = {".git", "node_modules", "qdrant_storage", "archive", "knowledge_base_legacy", "memory", "bak_mem", "agentic_lab"}
 
 
 def is_skipped(parts: tuple[str, ...]) -> bool:

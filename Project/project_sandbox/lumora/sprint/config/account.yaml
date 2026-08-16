@@ -1,0 +1,91 @@
+# Lumora sprint — ACCOUNT-LEVEL config (the constraint set; fixed per channel, set once then lock)
+# Closes file-06 GAP-1: "account config has no home". Source: sprint-2026-07/00-account-decisions.md
+# (RECOMMENDED options — Sin may swap; if you change archetype/persona mid-sprint the learning resets).
+# Framework v3: account level = Voice/Archetype + Audience Persona + Niche scope; post level = C x T x M.
+
+brand_id: own                      # brand_id discipline from day 1 (Phase-2 seam: client brands = new rows)
+account_handle: "@มูมีแสง"          # recommended #1; backup @lumora.mu
+catalog: saymu                     # catalog #1 (สายมู). Framework is catalog-agnostic; this file is per-catalog.
+sprint_start: "2026-08-17"         # day 1 of the 90-day sprint (set to your real first-post date)
+gate:                              # day-90 gate — 1 post >= 50K views OR 1,000 followers. Miss -> change tone/catalog or park.
+  days: 90
+  best_post_views: 50000
+  followers: 1000
+
+archetype:
+  primary: Explorer                # fellow explorer, never a guru
+  secondary: Magician              # "shift the energy / open another world" — powers the AI-art charm
+  shading: { Jester: [C9] }        # Jester ONLY on the comedy pillar; never changes the archetype
+appearance: faceless_voice_led     # 90-day mode. Trigger to open face+LIVE = the day the gate passes (not before)
+
+persona:
+  name: "GenZ มู สาย aesthetic"
+  age: "22-32"
+  where: "Bangkok working pro"
+  belief: "aesthetic + personal-meaning (not strict traditionalist)"
+  jobs: ["สงบก่อนทำงาน", "เท่กับความเชื่อของตัวเอง", "หัวเราะกับตัวเอง"]   # JTBD coverage gate #5
+
+voice:
+  one_liner: "curious traveler of spiritual aesthetics — Thai roots x global art language; contemplative some days, self-deprecating others, never a guru"
+  registers: [contemplative, playful, self-deprecating]
+  test: "อ่าน caption โดยไม่เห็นรูป — บอกได้ว่าเป็นช่องนี้ = ผ่าน"
+
+# Post-level DECISION SPACE — which arms are legal for this channel (validity gate #1 Legality)
+active_pillars:                    # 2-4 per account. C4 travelogue PARKED until after the gate.
+  C2: { name: "Oracle / Reading",        role: anchor,  funnel: Hub,     cadence: daily,        media: [M11, M1] }
+  C1: { name: "สายมู — เทพเจ้า",           role: engine,  funnel: Hygiene, cadence: "3-4/wk",     media: [M1, M2, M3] }
+  C6: { name: "Art product — original",  role: engine,  funnel: Hygiene, cadence: "3-4/wk",     media: [M1, M2, M3] }
+  C9: { name: "มูLife comedy",            role: human,   funnel: Hub,     cadence: "1-2/wk",     media: [M6, M1] }
+parked_pillars: [C4]
+
+# Themes: open-ended, but every theme declares a parent cluster so learning aggregates (file-06 GAP-3)
+active_themes:
+  Cosmic:       { parent: cosmic,      note: "space, celestial, nebula, astrology" }
+  Future-tech:  { parent: future,      note: "cyberpunk Neo-Bangkok, neon, holographic" }
+  Historical:   { parent: historical,  note: "ancient Thai/India/China, lost civilizations" }
+  Pastoral:     { parent: pastoral,    note: "countryside shrine, nature, Ghibli rural" }
+  Contemporary: { parent: contemporary, note: "modern Bangkok, daily life, photoreal" }
+oracle_theme: Cosmic               # oracle holds a fixed look (masthead of the ritual); art engine rotates
+
+sustainable_media: [M1, M2, M11, M6]   # what Sin can actually produce at <6 hrs/wk. M3 reel = only if time.
+
+funnel_target: { Hero: 0.05, Hub: 0.35, Hygiene: 0.60 }   # validity gate #4 (batch is oracle-heavy on purpose)
+channels: 1                        # N = 1 always for the sprint (1 <= N <= SxA; gates decide; do not split)
+
+# Aesthetic-week map for the art engine (anti-homogenization: batch by aesthetic, one block per week)
+aesthetic_weeks:
+  1: Future-tech
+  2: Historical
+  3: Cosmic
+  4: Pastoral
+
+# Hard compliance policy set (R-3.1 .. R-3.9). Enforced by compliance.py deterministic checks + LLM QA + human approve.
+compliance:
+  no_prediction: true              # ห้ามทำนาย/การันตีผล — frame as belief/meaning/reflection
+  no_medical: true
+  no_financial: true
+  no_fear_mongering: true
+  comedy_self_deprecating_only: true   # never mock believers or deities
+  sacred_imagery: respectful_homage    # homage-watch note in log; pull if reaction warrants
+  ai_label_every_ai_visual: true       # from post #1
+  pdpa_no_personal_data: true          # no birthdates/DMs collected during sprint
+  manual_publish_only: true            # NEVER an unofficial auto-publisher
+  banned_phrases_th:                   # deterministic pre-check (substring); LLM QA catches paraphrases
+    - "100%"
+    - "แน่นอน"
+    - "รวยแน่"
+    - "ปังแน่"
+    - "การันตี"
+    - "หายป่วย"
+    - "รักษาโรค"
+    - "จะซวย"
+    - "มีอันเป็นไป"
+    - "ถ้าไม่ทำ"
+    - "กำไรแน่"
+
+# Affiliate guardrail: not every post pushes TikTok Shop; C6 = own digital product; C9 = no selling
+affiliate_by_pillar:
+  C1: affiliate            # เครื่องราง/จี้ (5-15%)
+  C2: affiliate_light      # oracle deck / crystal only when natural
+  C6: own_product          # digital print / wallpaper (80-95% margin)
+  C9: none

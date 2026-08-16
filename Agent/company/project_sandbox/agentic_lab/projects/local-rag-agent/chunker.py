@@ -10,6 +10,22 @@ import pathlib
 
 HEADING = re.compile(r"^(#{1,6})\s+(.*)$")
 
+# --- filter ตอน index ต้นไม้จริง (option ก) ---
+# กัน dir ที่ไม่ใช่ความรู้ + machine-excluded (_prefix) + lab ตัวเอง
+SKIP_PARTS = {".git", "node_modules", ".venv", "_venv", "qdrant_storage",
+              "archive", "memory", "bak_mem", "knowledge_base_legacy",
+              "index", "agentic_lab"}
+# agent.md = "พฤติกรรม/system prompt" คนละแกนกับ RAG -> โหลดเป็น persona ไม่ใช่ index
+# (ดู persona.py) ; knowledge.md / kb / SKILL.md = ข้อเท็จจริง -> index
+EXCLUDE_NAMES = {"agent.md"}
+
+
+def is_excluded(path, root):
+    parts = path.relative_to(root).parts
+    if any(p.startswith("_") or p in SKIP_PARTS for p in parts):
+        return True
+    return path.name in EXCLUDE_NAMES
+
 
 def split_sections(text):
     """แตกเอกสารเป็น section ตาม heading พร้อมเก็บ heading path เต็ม"""
@@ -59,7 +75,10 @@ def split_children(text, max_chars):
 def build_chunks(root, max_chars=600):
     """คืน list ของ dict ที่พร้อม embed"""
     out = []
-    for path in sorted(pathlib.Path(root).rglob("*.md")):
+    root = pathlib.Path(root)
+    for path in sorted(root.rglob("*.md")):
+        if is_excluded(path, root):
+            continue
         raw = path.read_text(encoding="utf-8", errors="ignore")
         for si, sec in enumerate(split_sections(raw)):
             heading = " > ".join(sec["path"]) or path.stem

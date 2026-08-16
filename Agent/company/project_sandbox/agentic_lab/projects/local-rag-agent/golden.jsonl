@@ -1,0 +1,15 @@
+{"q": "RRF ต่างจากการบวก score ยังไง", "file": "rag-fundamentals.md", "heading": "RRF"}
+{"q": "cross-encoder กับ bi-encoder ใช้ต่างกันตอนไหน", "file": "rag-fundamentals.md", "heading": "reranker"}
+{"q": "เก็บ vector เยอะแค่ไหนถึงควรลง database", "file": "rag-fundamentals.md", "heading": "Storage"}
+{"q": "embed ก้อนเล็กแต่ส่งก้อนใหญ่ให้โมเดลเรียกว่าอะไร", "file": "rag-fundamentals.md", "heading": "Chunking"}
+{"q": "วัดคุณภาพ retrieval ด้วย metric อะไรบ้าง", "file": "rag-fundamentals.md", "heading": "Evaluation"}
+{"q": "agent จริงๆ แล้วคือโครงสร้างโปรแกรมแบบไหน", "file": "agent-fundamentals.md", "heading": "while loop"}
+{"q": "ทำไมใช้ agent แล้ว token บานเร็ว", "file": "agent-fundamentals.md", "heading": "messages"}
+{"q": "workflow กับ agent ต่างกันตรงไหน", "file": "agent-fundamentals.md", "heading": "Workflow"}
+{"q": "MCP มีไว้แก้ปัญหาอะไร", "file": "agent-fundamentals.md", "heading": "MCP"}
+{"q": "error compounding อธิบายว่ายังไง", "file": "agent-fundamentals.md", "heading": "Failure"}
+{"q": ".gguf กับ .safetensors ต่างกันยังไง", "file": "model-file-formats.md", "heading": "ตารางไฟล์"}
+{"q": "อยากให้โมเดลรู้ข้อมูลใหม่ ควรทำ RAG หรือ fine-tune", "file": "model-file-formats.md", "heading": "3 แกน"}
+{"q": "ทำไมโมเดลยิ่งเล็กยิ่งต้องพึ่ง RAG", "file": "local-stack-decisions.md", "heading": "ยิ่งโมเดลเล็ก"}
+{"q": "embedding ตัวไหนรองรับภาษาไทยได้ดี", "file": "local-stack-decisions.md", "heading": "เลือกโมเดล"}
+{"q": "ทำไม BM25 ภาษาไทยทำงานไม่ดีถ้าไม่มี tokenizer", "file": "local-stack-decisions.md", "heading": "กับดักภาษาไทย"}

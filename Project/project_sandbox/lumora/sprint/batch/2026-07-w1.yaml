@@ -1,0 +1,341 @@
+# Lumora sprint — batch W1 (days 1-7) · FULL SPEC
+# Source of truth: Agent/company/project_sandbox/lumora/sprint-2026-07/01-batch-30day.md §DAYS 1-7
+# Art-engine aesthetic this week = Future-tech (Cyber / Neo-Bangkok). Oracle (C2) holds Cosmic always.
+# Captions are VERBATIM from the spec (Thai) — do not "improve" them here; edit in the packet step.
+batch_id: 2026-07-w1
+account_handle: "@มูมีแสง"
+
+posts:
+  - post_id: L1-D01
+    day: 1
+    week: 1
+    content_pillar: C2
+    theme: Cosmic
+    media: M11
+    funnel_stage: Hub
+    jtbd: "ช่วยให้รู้สึกสงบ + ตั้งต้นวันได้"
+    hook_type: curiosity-choice
+    concept: 'การ์ดเปิดช่อง "แสงแรก" — เชิญคนเลือก 1 ใน 3 การ์ด (ซ้าย/กลาง/ขวา) แล้วปมความหมายไว้ให้ทบทวนเอง (ไม่ทำนาย)'
+    hook: "การ์ดใบแรกของช่องนี้ — เลือกใบที่ตาไปหยุดก่อน 🌌"
+    caption: |-
+      การ์ดใบแรกของช่องนี้ — เลือกใบที่ตาไปหยุดก่อน 🌌
+      ซ้าย = เริ่มใหม่ · กลาง = อยู่กับปัจจุบัน · ขวา = ปล่อยของเก่า
+      เราไม่ได้มาทำนายว่าพรุ่งนี้จะเป็นไง — แค่ชวนถามตัวเองว่า *วันนี้* อยากถือแสงแบบไหนไป
+      ช่องนี้ชื่อ **มูมีแสง** เพราะเราเชื่อว่าความเชื่อมันสวยได้ โดยไม่ต้องขู่ใคร ✨
+      เซฟใบที่ใช่ไว้ แล้วคอมเมนต์เลขที่เลือกมาให้ดูหน่อย
+    hashtags:
+      - "#การ์ดวันนี้"
+      - "#สายมู"
+      - "#มูมีแสง"
+      - "#ไพ่ออราเคิล"
+      - "#สายมูaesthetic"
+      - "#cosmic"
+      - "#ข้อคิดวันนี้"
+      - "#AIart"
+    affiliate_angle: "ไม่ขายวันเปิดช่อง — soft only (ผูก oracle deck ไว้ทีหลังเมื่อ natural)"
+    ai_visual: true
+    homage_watch: false
+    image:
+      prompt: >-
+        Three ethereal oracle cards floating side by side above open palms, cosmic nebula style,
+        volumetric atmospheric lighting, deep indigo + violet + soft gold palette, centered symmetrical
+        composition with negative space top and bottom, serene contemplative mood, shot on 35mm,
+        cinematic color grade, inspired by celestial art nouveau, 9:16
+      negative: "text, watermark, distorted hands, extra fingers, cluttered, harsh flash, low-res, deformed cards, logos"
+      aspect_ratio: "9:16"
+      seed: 10101
+      steps: 28
+      guidance: 3.5
+      count: 1
+      variation: 'เปลี่ยน lighting เป็น "single beam of light from top" (dramatic) แทน volumetric ทั่วภาพ'
+    notes: |-
+      Format: M11 interactive 3-choice reveal — carousel (ใบ 1 = เลือก, ใบ 2-4 = ความหมายแต่ละใบ)
+      หรือ single + คำตอบใน comment ปักหมุด. LAUNCH post ของช่อง.
+      AI label: เปิด toggle "AI-generated content".
+    full_spec: true
+
+  - post_id: L1-D02
+    day: 2
+    week: 1
+    content_pillar: C1
+    theme: Future-tech
+    media: M1
+    funnel_stage: Hygiene
+    jtbd: "ช่วยให้รู้สึกเท่กับความเชื่อของตัวเอง"
+    hook_type: statement
+    concept: "ท่านท้าวเวสสุวรรณใน Neo-Bangkok cyberpunk — homage สง่างาม, loop-friendly wallpaper"
+    hook: "ท่านท้าวเวสฯ ในปี 2087 ก็ยังสง่าเท่าเดิม — เราแค่เปลี่ยนภาษาที่เล่า"
+    caption: |-
+      ท่านท้าวเวสฯ ในปี 2087 ก็ยังสง่าเท่าเดิม — เราแค่เปลี่ยนภาษาที่เล่า แต่ความเคารพเท่าเดิม 🙏
+      บางวันท่านอยู่ในลายปูนปั้น บางวันท่านอยู่ใน Neo-Bangkok นะ
+      สำหรับเรา "มู" ไม่ได้แปลว่าต้องโบราณเสมอ — มันแปลว่าเราหาที่ทางให้ความเชื่ออยู่ในโลกที่เราใช้ชีวิตจริง
+      เซฟไปตั้ง lock screen เป็นแสงประจำเดือนนี้ก็ได้ ✨
+    hashtags:
+      - "#ท่านท้าวเวสสุวรรณ"
+      - "#สายมู"
+      - "#มูมีแสง"
+      - "#cyberpunk"
+      - "#NeoBangkok"
+      - "#เทพไทย"
+      - "#วอลเปเปอร์มู"
+      - "#AIart"
+    affiliate_angle: "C1 → จี้/เครื่องรางท่านท้าวเวสฯ (ปักตะกร้า, mention natural \"ใครมีจี้ท่านอยู่แล้วยกมือ\") + wallpaper ฟรีเป็น lead magnet"
+    ai_visual: true
+    homage_watch: true
+    image:
+      prompt: >-
+        Thao Wessuwan (Vaisravana) guardian deity standing dignified and majestic, cyberpunk Neo-Bangkok
+        setting, holding his club, ornate traditional Thai regalia fused with subtle holographic circuitry,
+        volumetric atmospheric lighting, neon teal + magenta + temple gold palette, low-angle heroic centered
+        composition, reverent powerful mood, shot on 35mm, cinematic teal-orange grade, inspired by
+        Blade Runner 2049 x Thai temple mural, 9:16
+      negative: "disrespectful pose, distorted proportions, mockery, comedic, deformed face, extra limbs, wrong number of fingers, text, watermark, low-res, cheap, garish"
+      aspect_ratio: "9:16"
+      seed: 20487
+      steps: 32
+      guidance: 4.0
+      count: 1
+      variation: "สลับ palette เป็น gold-dominant + soft blue rim light (อบอุ่นขึ้น, ลด sci-fi)"
+    notes: |-
+      Homage rule: สัดส่วน/สัญลักษณ์ต้องสง่างาม ไม่บิดเบือน; เฝ้าดู reaction 24 ชม.แรก พร้อมดึงออกถ้ามีเสียงติงเรื่องความเคารพ.
+      Format: M1 single, loop-friendly; subtle motion (image->video, Kling: neon flicker + slow push-in) ได้ถ้ามีเวลา.
+      AI label: เปิด toggle.
+    full_spec: true
+
+  - post_id: L1-D03
+    day: 3
+    week: 1
+    content_pillar: C2
+    theme: Cosmic
+    media: M1
+    funnel_stage: Hub
+    jtbd: "ช่วยให้รู้สึกสงบก่อนเริ่มงาน"
+    hook_type: statement
+    concept: 'การ์ด "ทิศทาง" — สี/ธาตุของวัน เป็น reflection prompt (ไม่ใช่คำทำนาย)'
+    hook: "การ์ดวันนี้: ทิศทาง — ไม่ใช่ว่าจะไปถึงไหน แต่ว่าวันนี้อยากหันหน้าไปทางไหน"
+    caption: |-
+      การ์ดวันนี้: **ทิศทาง** 🧭
+      ไม่ใช่ว่าจะไปถึงไหน — แต่วันนี้อยากหันหน้าไปทางไหน
+      สีของวัน = คราม (ทะเลลึก) ธาตุ = น้ำ · ชวนให้ค่อยๆ ไหล ไม่ต้องฝืน
+      "ขอแล้วยังไม่ได้? อาจไม่ใช่ท่านไม่ให้ — อาจเป็นเราที่ยังไม่ไปต่อ" 😌
+      คอมเมนต์คำเดียวที่อยากให้เป็นทิศของวันนี้
+    hashtags:
+      - "#การ์ดวันนี้"
+      - "#สายมู"
+      - "#มูมีแสง"
+      - "#ทิศทาง"
+      - "#cosmic"
+      - "#ข้อคิดวันนี้"
+      - "#สายมูaesthetic"
+      - "#AIart"
+    affiliate_angle: "soft — oracle deck (mention เฉพาะถ้าถาม), ไม่ hard sell"
+    ai_visual: true
+    homage_watch: false
+    image:
+      prompt: >-
+        A single glowing compass-mandala symbol suspended in deep space, cosmic nebula style, volumetric
+        atmospheric lighting, indigo + deep teal + soft gold palette, centered composition with vast negative
+        space, calm meditative mood, shot on 35mm, cinematic color grade, inspired by celestial cartography
+        and art nouveau, 9:16
+      negative: "text, watermark, cluttered, harsh light, human figures, low-res, deformed symbol, logos"
+      aspect_ratio: "9:16"
+      seed: 30311
+      steps: 28
+      guidance: 3.5
+      count: 1
+      variation: "เปลี่ยน composition เป็น off-center rule-of-thirds (การ์ดลอยมุมล่าง, space ด้านบน)"
+    notes: |-
+      Format: M1 single; ตัวอักษรสี/ธาตุใส่เป็น text overlay บางๆ ใน edit (ไม่ฝังในภาพ gen).
+      สลับจาก M11 ของ D01 เพื่อไม่ให้ซ้ำ C+M ติดกัน.
+      AI label: เปิด toggle.
+    full_spec: true
+
+  - post_id: L1-D04
+    day: 4
+    week: 1
+    content_pillar: C9
+    theme: Contemporary
+    media: M1
+    funnel_stage: Hub
+    jtbd: "ช่วยให้หัวเราะกับตัวเอง"
+    hook_type: relatable-callout
+    concept: '"ประเภทคนขอครบทุกเรื่องใน 1 ธูป" — self-deprecating, ล้อตัวเองเท่านั้น'
+    hook: "ประเภทคนขอครบทุกเรื่องใน 1 ธูป (เรานี่แหละ 🧎)"
+    caption: |-
+      ประเภทคนขอครบทุกเรื่องใน 1 ธูป (เรานี่แหละ 🧎)
+      "ขอให้สุขภาพดี งานปัง เงินเข้า ความรักมา หมาที่บ้านหายป่วย แล้วก็… เอ่อ ขอให้จำที่ขอไปได้ด้วย"
+      จุดธูปเสร็จเดินออกมาลืมหมดว่าขออะไรไปบ้าง 💨
+      เราว่าท่านคงเอ็นดูคนแบบเรานะ — มาแบบไม่มีลิสต์ มีแต่ใจ (ที่ขี้ลืม)
+      แท็กเพื่อนสายมูขี้ลืมมาเลย 👇
+    hashtags:
+      - "#สายมู"
+      - "#มูเตลู"
+      - "#มูมีแสง"
+      - "#สายมูขำๆ"
+      - "#relatable"
+      - "#มูlife"
+      - "#ขี้ลืม"
+    affiliate_angle: "ไม่ขาย — audience build / human layer (ตัวถ่วง AI-slop). Comment engagement = เป้าหมาย"
+    ai_visual: true
+    homage_watch: false
+    image:
+      prompt: >-
+        A single incense stick with a long curling smoke trail forming many tiny wish-symbols (heart, coin,
+        briefcase, dog) drifting upward, warm contemporary flat-illustration style, soft golden hour lighting,
+        cream + warm gold + soft red palette, centered composition with clean space for text overlay, gently
+        humorous cozy mood, inspired by warm editorial illustration, 9:16
+      negative: "realistic deity face, disrespectful, dark, scary, cluttered, text, watermark, low-res"
+      aspect_ratio: "9:16"
+      seed: 40114
+      steps: 26
+      guidance: 3.0
+      count: 1
+      variation: "เปลี่ยนเป็น flat vector sticker style (เล่นง่ายขึ้น, meme-native)"
+    notes: |-
+      Format: M1 text-skit; ข้อความเป็นพระเอก ภาพเป็น backdrop; ทำเป็น voice-over reel (faceless — เสียง Sin + b-roll) ได้
+      ห้ามโชว์หน้า (path-to-face หลัง gate). AI label: เปิด toggle (มี AI backdrop).
+      ⚠️ COMPLIANCE: caption verbatim มีวลี "หายป่วย" ซึ่งอยู่ใน banned_phrases_th (no-medical) — compliance.py จะ block.
+      ตั้งใจเก็บไว้ตรงตามต้นฉบับ; ให้แก้ตอน packet (เช่น "หมาที่บ้านแข็งแรง") ก่อน approve.
+    full_spec: true
+
+  - post_id: L1-D05
+    day: 5
+    week: 1
+    content_pillar: C2
+    theme: Cosmic
+    media: M11
+    funnel_stage: Hub
+    jtbd: "ช่วยให้รู้สึกสงบ + ปล่อยของที่ค้าง"
+    hook_type: curiosity-choice
+    concept: 'การ์ด "พื้นที่ว่าง / ปล่อยวาง" — 2-choice reveal (เก็บไว้ / ปล่อยไป)'
+    hook: "วันนี้มีอะไรที่ควรวางลงก่อนไหม? เลือกการ์ด 👇"
+    caption: |-
+      วันนี้มีอะไรที่ควรวางลงก่อนไหม? เลือกการ์ด 👇
+      ซ้าย = ยังไม่ถึงเวลา ถือต่อได้ · ขวา = วางได้แล้วนะ เบาขึ้นเยอะ
+      บางทีที่ขอไม่ได้ ไม่ใช่เพราะขอน้อย — แต่เพราะมือเรายังเต็มจนไม่มีที่ให้ของใหม่เข้ามา
+      (พูดกับตัวเองด้วยแหละ 😌)
+      เซฟไว้เตือนตัวเอง แล้วบอกหน่อยว่าเลือกข้างไหน
+    hashtags:
+      - "#การ์ดวันนี้"
+      - "#สายมู"
+      - "#มูมีแสง"
+      - "#ปล่อยวาง"
+      - "#ไพ่ออราเคิล"
+      - "#cosmic"
+      - "#ข้อคิดวันนี้"
+      - "#AIart"
+    affiliate_angle: "soft — crystal \"หินปล่อยวาง\" (เฉพาะถ้า natural), ไม่ดัน"
+    ai_visual: true
+    homage_watch: false
+    image:
+      prompt: >-
+        Two oracle cards floating over open cupped hands releasing tiny stars, cosmic nebula style, volumetric
+        atmospheric lighting, deep violet + indigo + soft gold palette, symmetrical centered composition with
+        airy negative space, gentle letting-go mood, shot on 35mm, cinematic color grade, inspired by celestial
+        art nouveau, 9:16
+      negative: "text, watermark, distorted hands, extra fingers, cluttered, harsh flash, low-res, deformed cards"
+      aspect_ratio: "9:16"
+      seed: 50225
+      steps: 28
+      guidance: 3.5
+      count: 1
+      variation: 'เปลี่ยน mood เป็น dawn warm-light (ปล่อยวางแบบ "เช้าใหม่") แทน night cosmic'
+    notes: |-
+      Format: M11 interactive 2-choice; คำตอบปักหมุด comment.
+      AI label: เปิด toggle.
+    full_spec: true
+
+  - post_id: L1-D06
+    day: 6
+    week: 1
+    content_pillar: C6
+    theme: Future-tech
+    media: M2
+    funnel_stage: Hygiene
+    jtbd: "ช่วยตกแต่งพื้นที่/หน้าจอให้ดู intentional"
+    hook_type: list-promise
+    concept: 'ชุด wallpaper "Neo-Bangkok Divine" 5 ใบ — affiliate = digital print/wallpaper (own product)'
+    hook: "5 วอลเปเปอร์สายมู × ไซเบอร์ ที่ทำให้หน้าจอดูมีของ — เลื่อนเลือกใบที่ใช่ →"
+    caption: |-
+      5 วอลเปเปอร์สายมู × ไซเบอร์ ที่ทำให้หน้าจอดูมีของ 📱✨ เลื่อนเลือกใบที่ใช่ →
+      เราทำชุดนี้ตอนตี 2 เพราะจู่ๆ อยากได้ lock screen ที่ "เท่แต่ยังมูได้"
+      ใบไหนโดนสุดคอมเมนต์เลขมา — ใบที่คนขอเยอะสุดเดี๋ยวทำเวอร์ชัน HD แจก
+      (แสงของเดือนนี้ เลือกเองได้ 🌆)
+    hashtags:
+      - "#วอลเปเปอร์"
+      - "#wallpaper"
+      - "#สายมู"
+      - "#มูมีแสง"
+      - "#cyberpunk"
+      - "#digitalart"
+      - "#aesthetic"
+      - "#AIart"
+    affiliate_angle: "own digital product (wallpaper pack, ราคาน้อย/แจก HD แลก follow) — diversify นอก TikTok Shop; ใบยอดฮิต → ขายเป็น art print"
+    ai_visual: true
+    homage_watch: false
+    image:
+      prompt: >-
+        Minimalist sacred geometry yantra glowing over a neon Neo-Bangkok skyline at night, cyberpunk style,
+        volumetric atmospheric lighting, teal + magenta + temple gold palette, clean centered composition with
+        phone-wallpaper safe zones, calm premium mood, shot on 35mm, cinematic teal-orange grade, inspired by
+        vaporwave temple art, 9:16
+      negative: "real deity face, text, watermark, cluttered, busy center (needs wallpaper safe zone), low-res, garish clash"
+      aspect_ratio: "9:16"
+      seed: 60300
+      steps: 30
+      guidance: 3.5
+      count: 5
+      variation: >-
+        5 ใบ = swap หนึ่ง lever/ใบ: (1) yantra กลาง · (2) lotus holographic · (3) นาค neon coil ·
+        (4) ดวงจันทร์+เจดีย์ hologram · (5) ธูป 3 ดอก light-trail · seed ไล่ 60300-60304 ให้ชุด cohesive ·
+        ทางเลือกที่ 2 = light-mode set (พื้นครีม + gold)
+    notes: |-
+      Format: M2 carousel 5 ใบ; ใบ 1 = cover hook, ใบ 2-6 = wallpaper; caption ชวนโหวต.
+      AI label: เปิด toggle.
+    full_spec: true
+
+  - post_id: L1-D07
+    day: 7
+    week: 1
+    content_pillar: C2
+    theme: Cosmic
+    media: M11
+    funnel_stage: Hub
+    jtbd: "ช่วยทบทวนสัปดาห์ + ตั้งต้นใหม่"
+    hook_type: milestone
+    concept: 'การ์ดปิดสัปดาห์ "ทบทวน" — ชวนมองย้อน 7 วันที่ผ่านมา (ไม่ทำนายสัปดาห์หน้า)'
+    hook: "ครบ 7 วันแรกของ มูมีแสง แล้ว — การ์ดปิดสัปดาห์ชวนทบทวน 🌙"
+    caption: |-
+      ครบ 7 วันแรกของ **มูมีแสง** แล้ว 🌙 — ขอบคุณทุกคนที่มาถือแสงด้วยกันนะ
+      การ์ดปิดสัปดาห์: **ทบทวน** — ไม่ใช่เพื่อตัดสินว่าทำดีพอไหม แค่ถามว่า *อาทิตย์นี้เราใจดีกับตัวเองพอรึยัง*
+      เลือกการ์ด: ซ้าย = พักก่อน · ขวา = พร้อมลุยต่อ
+      อาทิตย์หน้าเราจะพาเข้าโหมด **ลายไทย × ทอง** — เปลี่ยนภาษา แต่เคารพเท่าเดิม ✨
+      คอมเมนต์คำเดียวที่สรุปสัปดาห์นี้ของเธอ
+    hashtags:
+      - "#การ์ดวันนี้"
+      - "#สายมู"
+      - "#มูมีแสง"
+      - "#ทบทวน"
+      - "#ไพ่ออราเคิล"
+      - "#cosmic"
+      - "#สายมูaesthetic"
+      - "#AIart"
+    affiliate_angle: "soft — teaser W2 (ลายไทย) เพื่อ retention มากกว่าขาย"
+    ai_visual: true
+    homage_watch: false
+    image:
+      prompt: >-
+        A crescent moon cradling two small oracle cards, cosmic nebula style, volumetric atmospheric lighting,
+        deep indigo + violet + soft gold palette, centered composition with wide calm negative space,
+        reflective grateful mood, shot on 35mm, cinematic color grade, inspired by celestial art nouveau, 9:16
+      negative: "text, watermark, cluttered, harsh light, deformed moon, low-res, logos"
+      aspect_ratio: "9:16"
+      seed: 70407
+      steps: 28
+      guidance: 3.5
+      count: 1
+      variation: "เปลี่ยนเป็น full moon + soft gold glow (สว่าง/สรุปเชิงบวก)"
+    notes: |-
+      Format: M11 interactive; ใช้ปิด loop สัปดาห์ + เปิด teaser aesthetic W2 (Historical).
+      AI label: เปิด toggle.
+    full_spec: true

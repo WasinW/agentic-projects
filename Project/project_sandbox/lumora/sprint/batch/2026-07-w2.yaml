@@ -1,0 +1,130 @@
+# Lumora sprint — batch W2 (days 8-14) · OUTLINE ONLY (full_spec: false)
+# Source of truth: Agent/company/project_sandbox/lumora/sprint-2026-07/01-batch-30day.md §Week 2 table
+# Art-engine aesthetic this week = Historical (ลายไทย × ทอง). Oracle (C2) holds Cosmic always.
+# caption / hashtags / image stay EMPTY on purpose — empty beats fake. Expand one week ahead with the
+# `lumora-content-batch` skill (see batch.expand_outline_hint) before running `generate`.
+batch_id: 2026-07-w2
+account_handle: "@มูมีแสง"
+
+posts:
+  - post_id: L2-D08
+    day: 8
+    week: 2
+    content_pillar: C2
+    theme: Cosmic
+    media: M1
+    funnel_stage: Hub
+    jtbd: "ช่วยให้รู้สึกสงบ + ตั้งต้นวันได้"
+    hook_type: statement
+    concept: 'การ์ด "ราก/ที่มา" — reflection เรื่องรากเหง้า (ไม่ทำนาย)'
+    hook: "การ์ดวันนี้: ราก — บางทีทางไปข้างหน้าอยู่ในที่ที่เรามาจาก"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    full_spec: false
+
+  - post_id: L2-D09
+    day: 9
+    week: 2
+    content_pillar: C1
+    theme: Historical
+    media: M1
+    funnel_stage: Hygiene
+    jtbd: "ช่วยให้รู้สึกเท่กับความเชื่อของตัวเอง"
+    hook_type: statement
+    concept: "พระพิฆเนศลายปูนปั้นทองไทยคลาสสิก, homage สง่างาม"
+    hook: "ท่านในเวอร์ชันที่ปู่ย่าเราคุ้นตา — ทองคำ ลายไทย ความเคารพเต็มใบ"
+    caption: ""
+    ai_visual: true
+    homage_watch: true
+    image: null
+    notes: "Sacred imagery — respectful homage, เฝ้า reaction 24 ชม.แรก พร้อมดึงออก."
+    full_spec: false
+
+  - post_id: L2-D10
+    day: 10
+    week: 2
+    content_pillar: C2
+    theme: Cosmic
+    media: M11
+    funnel_stage: Hub
+    jtbd: "ช่วยให้รู้สึกสงบ + ตั้งต้นวันได้"
+    hook_type: curiosity-choice
+    concept: 'การ์ด "จังหวะ" — เลือกช้า/เร็วของวัน'
+    hook: "วันนี้ควรเร่งหรือควรรอ? เลือกการ์ด 👇"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    full_spec: false
+
+  - post_id: L2-D11
+    day: 11
+    week: 2
+    content_pillar: C9
+    theme: Contemporary
+    media: M1
+    funnel_stage: Hub
+    jtbd: "ช่วยให้หัวเราะกับตัวเอง"
+    hook_type: relatable-callout
+    concept: 'text-skit "ประเภทคนไหว้พระขอเลขท้าย 2 ตัว (แต่ไม่เคยจดเบอร์)"'
+    hook: "ประเภทคนขอเลขท่าน แต่ลืมจดทุกที (เราเอง 🎫)"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    notes: "Comedy = ล้อตัวเองเท่านั้น (ห้ามล้อผู้ศรัทธา/เทพ); faceless — ห้ามโชว์หน้า."
+    full_spec: false
+
+  - post_id: L2-D12
+    day: 12
+    week: 2
+    content_pillar: C2
+    theme: Cosmic
+    media: M1
+    funnel_stage: Hub
+    jtbd: "ช่วยให้รู้สึกสงบ + ตั้งต้นวันได้"
+    hook_type: question
+    concept: 'การ์ด "ความกตัญญู" — journaling prompt'
+    hook: "การ์ดวันนี้: กตัญญู — วันนี้อยากขอบคุณใครสักคนไหม"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    full_spec: false
+
+  - post_id: L2-D13
+    day: 13
+    week: 2
+    content_pillar: C6
+    theme: Historical
+    media: M2
+    funnel_stage: Hygiene
+    jtbd: "ช่วยตกแต่งพื้นที่/หน้าจอให้ดู intentional"
+    hook_type: list-promise
+    concept: "carousel wallpaper 5 ใบ ลายไทย-ทอง (digital print)"
+    hook: "5 วอลเปเปอร์ลายไทยทองที่ดูแพงบนหน้าจอ — เลื่อนเลย →"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    notes: "M2 carousel 5 ใบ — expansion ต้องตั้ง image.count = 5 + seed ไล่ต่อกันให้ชุด cohesive."
+    full_spec: false
+
+  - post_id: L2-D14
+    day: 14
+    week: 2
+    content_pillar: C2
+    theme: Cosmic
+    media: M11
+    funnel_stage: Hub
+    jtbd: "ช่วยทบทวนสัปดาห์ + ตั้งต้นใหม่"
+    hook_type: milestone
+    concept: 'week-close "สมดุล" — ทบทวน W2 + teaser W3 (Cosmic)'
+    hook: "ปิดสัปดาห์ลายไทย → อาทิตย์หน้าเข้าโหมดจักรวาล 🌌"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    full_spec: false

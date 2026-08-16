@@ -1,0 +1,44 @@
+# Lumora sprint — ENGINE config (paths, models, generator, cost, fatigue). Everything tunable lives here.
+paths:
+  db: ./lumora_sprint.db            # SQLite (schema in db.py; mirrors sprint-2026-07/02-post-log-template.md)
+  batch_dir: ./batch                 # batch/*.yaml — post specs (converted from 01-batch-30day.md)
+  out_dir: ./out                     # out/<post_id>/ = publish packet (image, caption, hashtags, checklist, meta)
+  events_log: ./out/agent_events.jsonl   # append-only accountability log (which agent/prompt/model/cost per step)
+  reviews_dir: ./out/reviews         # weekly ritual reports W1.md ...
+
+generator:                           # the ONE adapter opened by ADR-0002 (image generation). Publisher = NEVER.
+  provider: auto                     # auto | replicate | stub   (auto = replicate if REPLICATE_API_TOKEN set, else stub)
+  model: black-forest-labs/flux-dev  # Replicate model slug (batch spec says FLUX.1 dev)
+  defaults:
+    aspect_ratio: "9:16"
+    num_inference_steps: 28
+    guidance: 3.5
+    output_format: png
+    output_quality: 90
+  est_cost_usd_per_image: 0.025      # for cost tracing (07 §2.5)
+  timeout_s: 180
+
+llm:                                 # LLM is SURGICAL: compliance QA (structured) + optional caption variation only
+  model: claude-opus-5               # config-driven; swap freely (e.g. claude-sonnet-5) — never hardcode in code
+  effort: low                        # QA is a cheap task
+  max_tokens: 2048
+  enabled: true                      # false = deterministic checks only (works offline / no key)
+
+compliance:
+  require_llm_qa_before_approve: false   # true = `approve` refuses if LLM QA has not passed (needs ANTHROPIC key)
+  block_on_banned_phrase: true           # deterministic hit = packet status 'blocked' until caption edited
+
+fatigue:                             # closes file-06 GAP-2: "fatigue has no defined window"
+  no_same_c_m_consecutive: true      # ห้ามซ้ำ C+M เดิมติดกัน (oracle alternates M11 <-> M1)
+  same_combo_window_posts: 3         # same exact (C,T,M) not more than once per 3 posts (oracle exempt: anchor)
+  exempt_pillars: [C2]
+
+metrics:
+  snapshot_hours: [24, 168]          # views_24h at 24h; everything else at 7d (168h)
+
+review:
+  days: [7, 14, 21, 28]              # weekly ritual days
+  lookback_days: 28
+
+log:
+  agent_id: lumora-sprint            # written into post_log.agent + events (accountability layer, log from post #1)

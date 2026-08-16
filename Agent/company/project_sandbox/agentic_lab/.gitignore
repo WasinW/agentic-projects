@@ -1,0 +1,13 @@
+# build artifacts / runtime — อย่า commit และอย่าให้ embed pipeline ดูด
+index/
+.venv/
+_venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# model cache เผื่อเผลอโหลดลงในโฟลเดอร์นี้
+.cache/
+models/
+*.npy
+*.out

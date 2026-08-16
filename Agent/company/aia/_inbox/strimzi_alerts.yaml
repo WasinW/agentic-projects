@@ -1,0 +1,1052 @@
+# ============================================================================
+# Strimzi Kafka Cluster — Grafana Alert Rules (UAT)
+# ============================================================================
+# For:      สิน (วศิน) — Senior DE @ AIA
+# Target:   Grafana Alerting on Prometheus datasource
+# Scope:    Strimzi Cluster Operator metrics only (no JMX Exporter required)
+# Covers:   1 Heartbeat + 8 Alert rules
+# Version:  1.0 — 2026-08-15
+#
+# ============================================================================
+# CONTENTS
+# ============================================================================
+#
+# Group 1: kafka-cluster-alert-heartbeat  (interval: 1h)
+#   Rule H1: strimzi-cluster-heartbeat-uat
+#             → Comprehensive cluster status every 4h
+#
+# Group 2: kafka-cluster-alert-instant    (interval: 5m)
+#   Rule A1: strimzi-reconcile-fail-any-kind-uat
+#             → Reconciliation failed (any resource kind) [CRITICAL]
+#   Rule A2: strimzi-cluster-operator-down-uat
+#             → Operator pod down [CRITICAL]
+#   Rule A3: strimzi-resource-count-dropped-uat
+#             → Resource count decreased unexpectedly [WARNING]
+#   Rule A4: strimzi-reconcile-duration-p99-slow-uat
+#             → Operator overloaded [WARNING]
+#   Rule A5: strimzi-resource-paused-uat
+#             → Paused resource lingering [INFO]
+#   Rule A6: strimzi-reconcile-locked-storm-uat
+#             → Reconciliation lock storm [WARNING]
+#   Rule A7: strimzi-no-reconcile-happening-uat
+#             → Operator alive but stuck [WARNING]
+#   Rule A8: strimzi-kafkaconnector-not-ready-uat
+#             → Debezium/Connect connector NOT_READY [CRITICAL]
+#
+# ============================================================================
+# CONFIG NOTES
+# ============================================================================
+# 1. datasourceUid = PBFA97CFB590B2093  (Sin's existing Prometheus)
+#    → ถ้า Prometheus ตัวอื่น ให้เปลี่ยน
+# 2. namespace = "nsp-th-u-kafka"       (UAT namespace)
+#    → PROD ให้ duplicate + เปลี่ยน namespace + env label
+# 3. receiver = "test_wasin"            (test channel)
+#    → เปลี่ยนเป็น real DL ก่อน production
+# 4. folder = "kafka-clsuter-alert-rule" (keep Sin's existing typo for compat)
+#    → ถ้าสร้าง folder ใหม่ ควรใช้ "kafka-cluster-alert-rule"
+# ============================================================================
+
+apiVersion: 1
+
+groups:
+  # ==========================================================================
+  # GROUP 1: HEARTBEAT — Signal-of-life every 4 hours
+  # ==========================================================================
+  - orgId: 1
+    name: kafka-cluster-alert-heartbeat
+    folder: kafka-clsuter-alert-rule
+    interval: 1h
+    rules:
+
+      # ----------------------------------------------------------------------
+      # H1: Comprehensive cluster heartbeat
+      # ----------------------------------------------------------------------
+      # Purpose:  Report full cluster status every 4h
+      # Design:   Multi-query (A-I) with always-true threshold (J)
+      # noData:   Alerting (deadman's switch — silence = broken)
+      # ----------------------------------------------------------------------
+      - uid: heartbeat-strimzi-full-uat
+        title: strimzi-cluster-heartbeat-uat
+        condition: J
+        data:
+          # A: Operator up (1=alive, 0=dead)
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: sum(up{namespace="nsp-th-u-kafka", job=~".*strimzi.*"})
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: A
+
+          # B: Kafka CR count (broker clusters)
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: sum(strimzi_resources{kind="Kafka", namespace="nsp-th-u-kafka"}) or vector(0)
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: B
+
+          # C: KafkaConnect CR count
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: sum(strimzi_resources{kind="KafkaConnect", namespace="nsp-th-u-kafka"}) or vector(0)
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: C
+
+          # D: KafkaConnector count (Debezium connectors)
+          - refId: D
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: sum(strimzi_resources{kind="KafkaConnector", namespace="nsp-th-u-kafka"}) or vector(0)
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: D
+
+          # E: KafkaTopic CR count
+          - refId: E
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: sum(strimzi_resources{kind="KafkaTopic", namespace="nsp-th-u-kafka"}) or vector(0)
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: E
+
+          # F: Successful reconciliations (24h)
+          - refId: F
+            relativeTimeRange:
+              from: 86400
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: sum(increase(strimzi_reconciliations_successful_total{namespace="nsp-th-u-kafka"}[24h])) or vector(0)
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: F
+
+          # G: Failed reconciliations (24h) — entire cluster
+          - refId: G
+            relativeTimeRange:
+              from: 86400
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: sum(increase(strimzi_reconciliations_failed_total{namespace="nsp-th-u-kafka"}[24h])) or vector(0)
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: G
+
+          # H: Paused resources count
+          - refId: H
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: sum(strimzi_resources_paused{namespace="nsp-th-u-kafka"}) or vector(0)
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: H
+
+          # I: Reconciliation P95 duration (24h) — performance signal
+          - refId: I
+            relativeTimeRange:
+              from: 86400
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: |
+                histogram_quantile(0.95, 
+                  sum(rate(strimzi_reconciliations_duration_seconds_bucket{namespace="nsp-th-u-kafka"}[24h])) by (le)
+                ) or vector(0)
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: I
+
+          # J: Threshold — always fire (heartbeat behavior)
+          - refId: J
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gte
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: J
+              type: threshold
+
+        noDataState: Alerting     # ⭐ silence = broken monitoring
+        execErrState: Error
+        for: 4h
+        annotations:
+          summary: |
+            [Heartbeat] Strimzi UAT — Op={{ $values.A }} | Kafka={{ $values.B }} | Connect={{ $values.C }} | Connectors={{ $values.D }} | Topics={{ $values.E }} | Failed(24h)={{ $values.G }}
+          description: |-
+            🩺 รายงานสถานะ Strimzi cluster (UAT) ประจำ 4 ชั่วโมง
+
+            📡 Operator Health
+            ├─ Cluster Operator up: {{ $values.A }} (expected: 1)
+
+            📦 Resources ที่ operator เห็น
+            ├─ Kafka clusters:      {{ $values.B }}
+            ├─ KafkaConnect:        {{ $values.C }}
+            ├─ KafkaConnector:      {{ $values.D }}
+            └─ KafkaTopic:          {{ $values.E }}
+
+            🔄 Reconciliation (24 ชม.)
+            ├─ Successful:          {{ $values.F }}
+            ├─ Failed:              {{ $values.G }}
+            └─ P95 duration:        {{ printf "%.2f" $values.I.Value }} วินาที
+
+            ⏸️  Paused resources:    {{ $values.H }}
+
+            🎯 Interpret:
+            {{ if eq ($values.A).Value 0.0 }}⚠️ OPERATOR DOWN — ต้องแก้ด่วน!{{ else }}✓ Operator ทำงานปกติ{{ end }}
+            {{ if gt ($values.G).Value 0.0 }}⚠️ พบ failed reconciliation {{ $values.G }} ครั้งใน 24 ชม.{{ else }}✓ ไม่พบ reconciliation failure{{ end }}
+            {{ if gt ($values.H).Value 0.0 }}⚠️ มี resources ถูก pause อยู่ {{ $values.H }} ตัว — ตรวจสอบด้วย{{ else }}✓ ไม่มี resource ถูก pause{{ end }}
+            {{ if gt ($values.I).Value 60.0 }}⚠️ Reconciliation p95 > 60s — operator อาจ overloaded{{ else }}✓ Reconciliation performance ปกติ{{ end }}
+        labels:
+          component: strimzi-cluster
+          env: uat
+          severity: info
+          team: data-platform
+          type: heartbeat
+        isPaused: false
+        notification_settings:
+          receiver: test_wasin
+          repeat_interval: 4h
+
+
+  # ==========================================================================
+  # GROUP 2: INSTANT ALERTS — Fire on issue detection
+  # ==========================================================================
+  - orgId: 1
+    name: kafka-cluster-alert-instant
+    folder: kafka-clsuter-alert-rule
+    interval: 5m
+    rules:
+
+      # ----------------------------------------------------------------------
+      # A1: Reconciliation failed — ANY kind (expanded from Sin's original)
+      # ----------------------------------------------------------------------
+      # Purpose:  Detect reconciliation failures across ALL resource kinds
+      # Coverage: Kafka, KafkaConnect, KafkaConnector, KafkaTopic, etc.
+      # ----------------------------------------------------------------------
+      - uid: strimzi-reconcile-fail-any-uat
+        title: strimzi-reconcile-fail-any-kind-uat
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: |
+                sum by (kind) (
+                  increase(strimzi_reconciliations_failed_total{namespace="nsp-th-u-kafka"}[10m])
+                )
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: A
+
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: sum by (kind) (strimzi_resources{namespace="nsp-th-u-kafka"})
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: B
+
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: '[CRITICAL] Strimzi reconciliation failed — kind={{ $labels.kind }}, count={{ $values.A }}'
+          description: |-
+            🚨 Strimzi พบ reconciliation failure
+
+            Resource kind:      {{ $labels.kind }}
+            Namespace:          nsp-th-u-kafka
+            Failed count (10m): {{ $values.A }}
+            Env:                UAT
+
+            ⚡ Action:
+            1. kubectl get {{ $labels.kind | toLower }} -n nsp-th-u-kafka
+            2. kubectl describe {{ $labels.kind | toLower }} <name> -n nsp-th-u-kafka
+            3. kubectl logs -n nsp-th-u-kafka -l strimzi.io/kind=cluster-operator --tail=200
+          runbook_url: 'https://strimzi.io/docs/operators/latest/deploying'
+        labels:
+          component: strimzi
+          env: uat
+          severity: critical
+          team: data-platform
+        isPaused: false
+        notification_settings:
+          receiver: test_wasin
+          repeat_interval: 15m
+
+
+      # ----------------------------------------------------------------------
+      # A2: Strimzi Cluster Operator DOWN
+      # ----------------------------------------------------------------------
+      # Purpose:  Detect operator pod failure
+      # Critical: No operator = no reconciliation = drift
+      # ----------------------------------------------------------------------
+      - uid: strimzi-operator-down-uat
+        title: strimzi-cluster-operator-down-uat
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: sum(up{namespace="nsp-th-u-kafka", job=~".*strimzi.*"})
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: A
+
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+
+        noDataState: Alerting     # no data = also down
+        execErrState: Alerting
+        for: 2m
+        annotations:
+          summary: '[CRITICAL] Strimzi Cluster Operator DOWN — UAT'
+          description: |-
+            🔴 Strimzi Cluster Operator ไม่ทำงาน
+
+            Namespace: nsp-th-u-kafka
+            Env: UAT
+            Up count: {{ $values.A }} (expected: 1)
+
+            ⚠️ Impact:
+            - ไม่มีใคร reconcile Kafka/Connect/Topics ใหม่
+            - Changes ที่ apply ไปจะไม่ถูกดำเนินการ
+            - Existing brokers ยัง run แต่ไม่มี management layer
+
+            ⚡ Action:
+            1. kubectl get pods -n nsp-th-u-kafka -l strimzi.io/kind=cluster-operator
+            2. kubectl describe pod -n nsp-th-u-kafka <operator-pod>
+            3. kubectl logs -n nsp-th-u-kafka <operator-pod> --tail=200
+            4. Check node health / resource quota
+        labels:
+          component: strimzi-operator
+          env: uat
+          severity: critical
+          team: data-platform
+        isPaused: false
+        notification_settings:
+          receiver: test_wasin
+          repeat_interval: 15m
+
+
+      # ----------------------------------------------------------------------
+      # A3: Resource Count Dropped Unexpectedly
+      # ----------------------------------------------------------------------
+      # Purpose:  Detect accidental deletion / CI/CD errors
+      # Method:   Compare current count vs 1 hour ago
+      # ----------------------------------------------------------------------
+      - uid: strimzi-resource-count-dropped-uat
+        title: strimzi-resource-count-dropped-uat
+        condition: D
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: sum by (kind) (strimzi_resources{namespace="nsp-th-u-kafka"})
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: A
+
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: sum by (kind) (strimzi_resources{namespace="nsp-th-u-kafka"} offset 1h)
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: B
+
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: $B - $A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: math
+
+          - refId: D
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: C
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: D
+              type: threshold
+
+        noDataState: OK
+        execErrState: Error
+        for: 10m
+        annotations:
+          summary: '[WARNING] Strimzi resource count dropped — {{ $labels.kind }} lost {{ $values.C }}'
+          description: |-
+            ⚠️ จำนวน {{ $labels.kind }} resources ลดลง
+
+            Kind:        {{ $labels.kind }}
+            Current:     {{ $values.A }}
+            1h ago:      {{ $values.B }}
+            Lost:        {{ $values.C }}
+
+            Possible causes:
+            - มีคน kubectl delete
+            - CI/CD deployment error
+            - Namespace ถูก reconfigure
+
+            ⚡ Action:
+            1. kubectl get events -n nsp-th-u-kafka --sort-by='.lastTimestamp' | head -50
+            2. kubectl get {{ $labels.kind | toLower }} -n nsp-th-u-kafka
+            3. Check git history for recent CR changes
+        labels:
+          component: strimzi
+          env: uat
+          severity: warning
+          team: data-platform
+        isPaused: false
+        notification_settings:
+          receiver: test_wasin
+          repeat_interval: 1h
+
+
+      # ----------------------------------------------------------------------
+      # A4: Reconciliation Duration Slow (Operator Overloaded)
+      # ----------------------------------------------------------------------
+      # Purpose:  Detect operator overload before it fails
+      # Method:   P99 reconciliation time > 120s
+      # ----------------------------------------------------------------------
+      - uid: strimzi-reconcile-slow-uat
+        title: strimzi-reconcile-duration-p99-slow-uat
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: |
+                histogram_quantile(0.99,
+                  sum by (kind, le) (
+                    rate(strimzi_reconciliations_duration_seconds_bucket{namespace="nsp-th-u-kafka"}[15m])
+                  )
+                )
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: A
+
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 120
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+
+        noDataState: OK
+        execErrState: Error
+        for: 15m
+        annotations:
+          summary: '[WARNING] Strimzi reconcile P99 slow — kind={{ $labels.kind }}, p99={{ printf "%.2f" $values.A.Value }}s'
+          description: |-
+            ⚠️ Reconciliation ช้าผิดปกติ
+
+            Kind:      {{ $labels.kind }}
+            P99:       {{ printf "%.2f" $values.A.Value }} seconds
+            Threshold: 120s
+
+            Possible causes:
+            - Operator overloaded (มี CR เยอะเกินไป)
+            - Kubernetes API slow
+            - Network issue between operator and API server
+            - Kafka cluster unresponsive during rolling update
+
+            ⚡ Action:
+            1. kubectl top pod -n nsp-th-u-kafka -l strimzi.io/kind=cluster-operator
+            2. kubectl logs -n nsp-th-u-kafka <operator-pod> | grep -i "reconcil\|slow\|timeout"
+            3. Check kube-apiserver latency
+        labels:
+          component: strimzi-operator
+          env: uat
+          severity: warning
+          team: data-platform
+        isPaused: false
+        notification_settings:
+          receiver: test_wasin
+          repeat_interval: 1h
+
+
+      # ----------------------------------------------------------------------
+      # A5: Paused Resource Detected
+      # ----------------------------------------------------------------------
+      # Purpose:  Detect resources with pause-reconciliation annotation
+      #           left on for too long (forgot to unpause after debug)
+      # ----------------------------------------------------------------------
+      - uid: strimzi-resource-paused-uat
+        title: strimzi-resource-paused-uat
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: sum by (kind) (strimzi_resources_paused{namespace="nsp-th-u-kafka"})
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: A
+
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+
+        noDataState: OK
+        execErrState: Error
+        for: 30m       # 30 min tolerance — pause may be intentional
+        annotations:
+          summary: '[INFO] Strimzi resource paused — kind={{ $labels.kind }}, count={{ $values.A }}'
+          description: |-
+            ℹ️  พบ {{ $labels.kind }} ที่ถูก pause reconciliation
+
+            Kind:     {{ $labels.kind }}
+            Paused:   {{ $values.A }} resources
+            Duration: 30+ นาที
+
+            หมายเหตุ:
+            - pause ถูกตั้งด้วย annotation strimzi.io/pause-reconciliation="true"
+            - อาจตั้งใจ debug — ถ้าใช่ ignore
+            - ถ้าไม่รู้ว่าใครตั้ง → ตรวจสอบ
+
+            ⚡ Action:
+            1. kubectl get {{ $labels.kind | toLower }} -n nsp-th-u-kafka -o json | jq '.items[] | select(.metadata.annotations."strimzi.io/pause-reconciliation"=="true") | .metadata.name'
+            2. หา owner ผ่าน git blame / annotations
+            3. ถ้า unpause: kubectl annotate {{ $labels.kind | toLower }} <name> strimzi.io/pause-reconciliation- -n nsp-th-u-kafka
+        labels:
+          component: strimzi
+          env: uat
+          severity: info
+          team: data-platform
+        isPaused: false
+        notification_settings:
+          receiver: test_wasin
+          repeat_interval: 6h
+
+
+      # ----------------------------------------------------------------------
+      # A6: Reconciliation Lock Storm (Contention Loop)
+      # ----------------------------------------------------------------------
+      # Purpose:  Detect operator stuck in reconciliation contention
+      # Method:   > 10 locks in 15 min = storm pattern
+      # ----------------------------------------------------------------------
+      - uid: strimzi-reconcile-locked-storm-uat
+        title: strimzi-reconcile-locked-storm-uat
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: |
+                sum by (kind) (
+                  increase(strimzi_reconciliations_locked_total{namespace="nsp-th-u-kafka"}[15m])
+                )
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: A
+
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 10
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+
+        noDataState: OK
+        execErrState: Error
+        for: 15m
+        annotations:
+          summary: '[WARNING] Strimzi reconciliation lock storm — kind={{ $labels.kind }}, locks={{ $values.A }}'
+          description: |-
+            ⚠️ พบ reconciliation ถูก skip เพราะ lock ซ้ำๆ
+
+            Kind:           {{ $labels.kind }}
+            Locked (15m):   {{ $values.A }}
+            Threshold:      10
+
+            Meaning:
+            - Reconciliation กำลังรันช้า → ตัวถัดไปมาก็ถูก skip
+            - อาจเกิดจาก long-running rolling update
+            - หรือ operator stuck ใน reconciliation loop
+
+            ⚡ Action:
+            1. เช็ค Rule A4 (reconcile duration) — ถ้าช้าด้วย = confirmed overload
+            2. kubectl logs -n nsp-th-u-kafka <operator> | grep -i "lock\|already in progress"
+            3. Consider scale up operator หรือลด CR count
+        labels:
+          component: strimzi-operator
+          env: uat
+          severity: warning
+          team: data-platform
+        isPaused: false
+        notification_settings:
+          receiver: test_wasin
+          repeat_interval: 1h
+
+
+      # ----------------------------------------------------------------------
+      # A7: No Reconciliation Happening (Operator Alive but Stuck)
+      # ----------------------------------------------------------------------
+      # Purpose:  Detect subtle deadlock — operator up but not doing work
+      # Method:   Operator up=1 AND reconciles=0 for 30 min
+      # ----------------------------------------------------------------------
+      - uid: strimzi-no-reconcile-uat
+        title: strimzi-no-reconcile-happening-uat
+        condition: D
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: sum(up{namespace="nsp-th-u-kafka", job=~".*strimzi.*"})
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: A
+
+          - refId: B
+            relativeTimeRange:
+              from: 1800
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: |
+                sum(increase(strimzi_reconciliations_total{namespace="nsp-th-u-kafka"}[30m])) or vector(0)
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: B
+
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: $A > 0 && $B == 0
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: math
+
+          - refId: D
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: C
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: D
+              type: threshold
+
+        noDataState: OK
+        execErrState: Error
+        for: 30m
+        annotations:
+          summary: '[WARNING] Operator alive but no reconciliations in 30 min — UAT'
+          description: |-
+            ⚠️ Operator ยังอยู่ แต่ไม่ทำ reconciliation เลย 30 นาที
+
+            Operator up:        {{ $values.A }}
+            Reconciles (30m):   {{ $values.B }}
+
+            Meaning:
+            - Operator อาจ deadlock
+            - หรือ Kubernetes API server ปฏิเสธ list/watch
+            - หรือ periodic reconciliation ถูกปิด/config ผิด
+            - Normal Strimzi reconcile ทุก 2 min → 30 min = ผิดปกติมาก
+
+            ⚡ Action:
+            1. kubectl logs -n nsp-th-u-kafka <operator> --tail=500 | grep -iE "error|deadlock|panic"
+            2. kubectl auth can-i list kafkas.kafka.strimzi.io --as=system:serviceaccount:nsp-th-u-kafka:strimzi-cluster-operator
+            3. Restart operator ถ้าจำเป็น: kubectl rollout restart deploy/strimzi-cluster-operator -n nsp-th-u-kafka
+        labels:
+          component: strimzi-operator
+          env: uat
+          severity: warning
+          team: data-platform
+        isPaused: false
+        notification_settings:
+          receiver: test_wasin
+          repeat_interval: 30m
+
+
+      # ----------------------------------------------------------------------
+      # A8: KafkaConnector NOT_READY State
+      # ----------------------------------------------------------------------
+      # Purpose:  Detect Debezium/Kafka Connect connector failures
+      # Metric:   strimzi_resource_state (⚠️ deprecating — verify exists first)
+      # Fallback: If metric absent → use A1 (reconcile_failed) with kind filter
+      # ----------------------------------------------------------------------
+      - uid: strimzi-connector-not-ready-uat
+        title: strimzi-kafkaconnector-not-ready-uat
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              editorMode: code
+              expr: |
+                sum by (name) (
+                  strimzi_resource_state{
+                    kind="KafkaConnector",
+                    namespace="nsp-th-u-kafka"
+                  } == 0
+                )
+              instant: true
+              intervalMs: 1000
+              legendFormat: __auto
+              maxDataPoints: 43200
+              range: false
+              refId: A
+
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: threshold
+
+        noDataState: OK
+        execErrState: Error
+        for: 10m
+        annotations:
+          summary: '[CRITICAL] KafkaConnector NOT READY — name={{ $labels.name }}'
+          description: |-
+            🔴 KafkaConnector อยู่ในสถานะ NotReady
+
+            Connector name:  {{ $labels.name }}
+            Namespace:       nsp-th-u-kafka
+
+            Impact:
+            - Debezium/Connect task อาจไม่ ingest data
+            - CDC pipeline ค้าง
+            - Downstream consumer จะไม่เห็น data ใหม่
+
+            ⚡ Action:
+            1. kubectl get kafkaconnector {{ $labels.name }} -n nsp-th-u-kafka -o yaml
+            2. kubectl describe kafkaconnector {{ $labels.name }} -n nsp-th-u-kafka
+            3. Check status.conditions และ status.tasksMax
+            4. เข้า Kafka Connect REST API: curl -s http://<connect-svc>:8083/connectors/{{ $labels.name }}/status | jq
+        labels:
+          component: kafka-connector
+          env: uat
+          severity: critical
+          team: data-platform
+        isPaused: false
+        notification_settings:
+          receiver: test_wasin
+          repeat_interval: 15m
+
+# ============================================================================
+# END OF FILE
+# ============================================================================

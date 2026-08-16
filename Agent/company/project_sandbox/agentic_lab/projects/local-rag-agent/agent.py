@@ -48,8 +48,12 @@ def chat(messages):
     return r.json()["message"]
 
 
-def run(question, verbose=True):
-    messages = [{"role": "system", "content": SYSTEM},
+def run(question, verbose=True, persona=None):
+    system = SYSTEM
+    if persona:                              # (ค) โหลด agent.md เป็น persona นำหน้า
+        from persona import load_persona
+        system = load_persona(persona).strip() + "\n\n---\n\n" + SYSTEM
+    messages = [{"role": "system", "content": system},
                 {"role": "user", "content": question}]
 
     for step in range(1, MAX_STEPS + 1):
@@ -79,6 +83,12 @@ def run(question, verbose=True):
 
 
 if __name__ == "__main__":
-    q = " ".join(sys.argv[1:]) or "สรุปโครงสร้าง project ของผมหน่อย"
-    answer = run(q)
+    argv = sys.argv[1:]
+    persona = None
+    if "--persona" in argv:                  # (ค) python agent.py --persona technical/architect "..."
+        i = argv.index("--persona")
+        persona = argv[i + 1]
+        argv = argv[:i] + argv[i + 2:]
+    q = " ".join(argv) or "สรุปโครงสร้าง project ของผมหน่อย"
+    answer = run(q, persona=persona)
     print(f"\n{BAR}\nคำตอบ:\n{BAR}\n{answer}")

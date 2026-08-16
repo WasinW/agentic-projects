@@ -1,10 +1,12 @@
 """ค่า config ทั้งหมดอยู่ที่เดียว - แก้ตรงนี้ที่เดียวพอ"""
 from pathlib import Path
 
-# --- KB ของคุณ ---
-# ชี้มาที่ kb/ ของ lab เอง -> index ได้ทันทีโดยไม่ต้องแตะ KB จริง
-KB_ROOT   = Path(__file__).resolve().parents[2] / "kb"
-# ของจริงค่อยสลับเป็น: Path.home() / "Documents" / "Projects" / "Agent"
+# --- KB ที่จะ index — สลับ KB_ROOT ระหว่าง 2 อันนี้ ---
+#   LAB_KB  = kb/ ของ lab เอง (4 ไฟล์ ชุดเล็ก ทดลองไว รู้ ground truth)
+#   REAL_KB = ต้นไม้ Agent/ จริง (READ-ONLY; chunker filter กัน agent.md/_prefix/agentic_lab)
+LAB_KB    = Path(__file__).resolve().parents[2] / "kb"
+REAL_KB   = Path.home() / "Documents" / "Projects" / "Agent"
+KB_ROOT   = REAL_KB            # option (ก): index ต้นไม้จริง (อ่านอย่างเดียว)
 INDEX_DIR = Path(__file__).parent / "index"
 
 # --- Models (local ล้วน) ---

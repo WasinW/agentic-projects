@@ -1,0 +1,130 @@
+# Lumora sprint — batch W3 (days 15-21) · OUTLINE ONLY (full_spec: false)
+# Source of truth: Agent/company/project_sandbox/lumora/sprint-2026-07/01-batch-30day.md §Week 3 table
+# Art-engine aesthetic this week = Cosmic (nebula / celestial / astrology) — it coincides with the fixed
+# oracle look this week; that is intended, not a bug. caption / hashtags / image stay EMPTY on purpose.
+batch_id: 2026-07-w3
+account_handle: "@มูมีแสง"
+
+posts:
+  - post_id: L3-D15
+    day: 15
+    week: 3
+    content_pillar: C2
+    theme: Cosmic
+    media: M1
+    funnel_stage: Hub
+    jtbd: "ช่วยให้รู้สึกสงบ + ตั้งต้นวันได้"
+    hook_type: statement
+    concept: 'การ์ด "เริ่มใหม่กลางทาง"'
+    hook: "การ์ดวันนี้: เริ่มใหม่ได้เสมอ แม้กลางเดือน"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    full_spec: false
+
+  - post_id: L3-D16
+    day: 16
+    week: 3
+    content_pillar: C1
+    theme: Cosmic
+    media: M1
+    funnel_stage: Hygiene
+    jtbd: "ช่วยให้รู้สึกเท่กับความเชื่อของตัวเอง"
+    hook_type: statement
+    concept: "ท่านท้าวเวสฯ ท่ามกลาง nebula/ดวงดาว, homage"
+    hook: "ท่านในจักรวาล — สเกลที่ทำให้ปัญหาเราเล็กลงนิดนึง ✨"
+    caption: ""
+    ai_visual: true
+    homage_watch: true
+    image: null
+    notes: "Sacred imagery — respectful homage, เฝ้า reaction 24 ชม.แรก พร้อมดึงออก."
+    full_spec: false
+
+  - post_id: L3-D17
+    day: 17
+    week: 3
+    content_pillar: C2
+    theme: Cosmic
+    media: M11
+    funnel_stage: Hub
+    jtbd: "ช่วยให้รู้สึกสงบ + ตั้งต้นวันได้"
+    hook_type: list-promise
+    concept: 'การ์ด "ราศีวันนี้" (ทั่วไป, ไม่เก็บวันเกิดผู้ชม — PDPA-safe)'
+    hook: "12 ราศี 1 ข้อคิดร่วม — ไม่ถามวันเกิด แค่ชวนคิด"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    notes: "PDPA-safe: ห้ามถาม/เก็บวันเกิดรายคน; framing = reflection ร่วม ไม่ใช่คำทำนายรายบุคคล."
+    full_spec: false
+
+  - post_id: L3-D18
+    day: 18
+    week: 3
+    content_pillar: C9
+    theme: Contemporary
+    media: M1
+    funnel_stage: Hub
+    jtbd: "ช่วยให้หัวเราะกับตัวเอง"
+    hook_type: relatable-callout
+    concept: 'text-skit "ประเภทคนเช็คดวงราศีทุกแอป จนดวงตีกันเอง"'
+    hook: "อ่านดวง 5 แอป ได้ 5 คำตอบ สุดท้ายเชื่ออันที่ถูกใจ (เรานี่แหละ)"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    notes: "Comedy = ล้อตัวเองเท่านั้น; faceless."
+    full_spec: false
+
+  - post_id: L3-D19
+    day: 19
+    week: 3
+    content_pillar: C6
+    theme: Cosmic
+    media: M2
+    funnel_stage: Hygiene
+    jtbd: "ช่วยตกแต่งพื้นที่/หน้าจอให้ดู intentional"
+    hook_type: list-promise
+    concept: "carousel wallpaper 5 ใบ nebula-celestial (digital print)"
+    hook: "5 วอลเปเปอร์จักรวาลที่ทำให้มือถือดูเหมือนพกดวงดาว →"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    notes: "M2 carousel 5 ใบ — expansion ต้องตั้ง image.count = 5 + seed ไล่ต่อกัน."
+    full_spec: false
+
+  - post_id: L3-D20
+    day: 20
+    week: 3
+    content_pillar: C2
+    theme: Cosmic
+    media: M1
+    funnel_stage: Hub
+    jtbd: "ช่วยให้รู้สึกสงบ + ตั้งต้นวันได้"
+    hook_type: statement
+    concept: 'การ์ด "แสงในความมืด" — reflection ช่วง low'
+    hook: "การ์ดวันนี้: แม้คืนที่มืดสุด ดาวก็ยังอยู่"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    full_spec: false
+
+  - post_id: L3-D21
+    day: 21
+    week: 3
+    content_pillar: C2
+    theme: Cosmic
+    media: M11
+    funnel_stage: Hub
+    jtbd: "ช่วยทบทวนสัปดาห์ + ตั้งต้นใหม่"
+    hook_type: milestone
+    concept: 'week-close "เชื่อมโยง" — ทบทวน W3 + teaser W4 (Pastoral)'
+    hook: "ปิดสัปดาห์จักรวาล → อาทิตย์หน้ากลับสู่ศาลไทยเงียบๆ 🌾"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    full_spec: false

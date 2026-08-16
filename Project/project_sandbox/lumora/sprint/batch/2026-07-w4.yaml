@@ -1,0 +1,172 @@
+# Lumora sprint — batch W4 (days 22-30) · OUTLINE ONLY (full_spec: false)
+# Source of truth: Agent/company/project_sandbox/lumora/sprint-2026-07/01-batch-30day.md §Week 4 + §Days 29-30
+# Art-engine aesthetic this week = Pastoral (Ghibli-rural ศาลไทย / photoreal สงบ). Oracle (C2) holds Cosmic.
+# Days 29-30 = wrap + the single Hero of the batch; both live in week 4.
+batch_id: 2026-07-w4
+account_handle: "@มูมีแสง"
+
+posts:
+  - post_id: L4-D22
+    day: 22
+    week: 4
+    content_pillar: C2
+    theme: Cosmic
+    media: M1
+    funnel_stage: Hub
+    jtbd: "ช่วยให้รู้สึกสงบ + ตั้งต้นวันได้"
+    hook_type: statement
+    concept: 'การ์ด "ความเรียบง่าย"'
+    hook: "การ์ดวันนี้: บางคำตอบอยู่ในความเรียบง่ายที่เรามองข้าม"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    full_spec: false
+
+  - post_id: L4-D23
+    day: 23
+    week: 4
+    content_pillar: C1
+    theme: Pastoral
+    media: M1
+    funnel_stage: Hygiene
+    jtbd: "ช่วยให้รู้สึกเท่กับความเชื่อของตัวเอง"
+    hook_type: statement
+    concept: "ศาลพระภูมิกลางทุ่ง แสงเช้า Ghibli-soft, homage"
+    hook: "ศาลเล็กๆ ริมทุ่ง — ที่ที่ความเชื่อไม่ต้องอลังการก็ศักดิ์สิทธิ์"
+    caption: ""
+    ai_visual: true
+    homage_watch: true
+    image: null
+    notes: "Sacred imagery — respectful homage, เฝ้า reaction 24 ชม.แรก พร้อมดึงออก."
+    full_spec: false
+
+  - post_id: L4-D24
+    day: 24
+    week: 4
+    content_pillar: C2
+    theme: Cosmic
+    media: M11
+    funnel_stage: Hub
+    jtbd: "ช่วยให้รู้สึกสงบ + ตั้งต้นวันได้"
+    hook_type: curiosity-choice
+    concept: 'การ์ด "พอ" — reflection เรื่อง contentment'
+    hook: "วันนี้ 'พอ' หน้าตาเป็นยังไงสำหรับเธอ? เลือกการ์ด"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    full_spec: false
+
+  - post_id: L4-D25
+    day: 25
+    week: 4
+    content_pillar: C9
+    theme: Contemporary
+    media: M1
+    funnel_stage: Hub
+    jtbd: "ช่วยให้หัวเราะกับตัวเอง"
+    hook_type: relatable-callout
+    concept: 'text-skit "ประเภทคนสาย aesthetic จัดโต๊ะหมู่สวยกว่าจะได้ไหว้"'
+    hook: "จัดโต๊ะหมู่ 2 ชม. ไหว้จริง 2 นาที (สวยไว้ก่อน 🕯️)"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    notes: "Comedy = ล้อตัวเองเท่านั้น; faceless."
+    full_spec: false
+
+  - post_id: L4-D26
+    day: 26
+    week: 4
+    content_pillar: C6
+    theme: Pastoral
+    media: M2
+    funnel_stage: Hygiene
+    jtbd: "ช่วยตกแต่งพื้นที่/หน้าจอให้ดู intentional"
+    hook_type: list-promise
+    concept: "carousel wallpaper 5 ใบ ศาล/ทุ่ง Ghibli-soft (digital print)"
+    hook: "5 วอลเปเปอร์สายมูโทนอุ่น สำหรับคนอยากให้ใจเบา →"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    notes: "M2 carousel 5 ใบ — expansion ต้องตั้ง image.count = 5 + seed ไล่ต่อกัน."
+    full_spec: false
+
+  - post_id: L4-D27
+    day: 27
+    week: 4
+    content_pillar: C2
+    theme: Cosmic
+    media: M1
+    funnel_stage: Hub
+    jtbd: "ช่วยให้รู้สึกสงบ + ตั้งต้นวันได้"
+    hook_type: statement
+    concept: 'การ์ด "เมตตาต่อตัวเอง"'
+    hook: "การ์ดวันนี้: ใจดีกับตัวเองแบบที่เราใจดีกับคนอื่น"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    full_spec: false
+
+  - post_id: L4-D28
+    day: 28
+    week: 4
+    content_pillar: C2
+    theme: Cosmic
+    media: M11
+    funnel_stage: Hub
+    jtbd: "ช่วยทบทวนสัปดาห์ + ตั้งต้นใหม่"
+    hook_type: milestone
+    concept: 'week-close "ครบเดือน" — ทบทวน 4 สัปดาห์ + ขอบคุณชุมชน'
+    hook: "เกือบครบเดือนแล้ว! ทบทวนไปด้วยกัน 🌙"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    full_spec: false
+
+  - post_id: L4-D29
+    day: 29
+    week: 4
+    content_pillar: C2
+    theme: Historical
+    media: M2
+    funnel_stage: Hero
+    jtbd: "ช่วยให้รู้สึกสงบ + ตั้งต้นวันได้"
+    hook_type: milestone
+    concept: "วันพระ special carousel — homage เทพ/สิ่งเคารพ + ชุด reflection การ์ด 5 ใบ (ตรงวันพระในหน้าต่างนี้; ถ้าไม่ตรง → ทำเป็น month-recap best cards)"
+    hook: "วันพระนี้ ขอชวนทุกคนหยุดหายใจช้าๆ ด้วยกัน 🙏 (การ์ด 5 ใบ)"
+    caption: ""
+    ai_visual: true
+    homage_watch: true
+    image: null
+    notes: |-
+      🏆 HERO ของ batch (1/30). Combo copied VERBATIM from the spec table: C2 x Historical x M2.
+      ⚠️ KNOWN CONFLICT — validate_spec() จะรายงาน 2 ข้อ ตั้งใจ ไม่ใช่ bug ใน loader:
+        1. oracle-theme rule: C2 ต้องใช้ account.oracle_theme (Cosmic) แต่ Hero ใบนี้เป็น Historical (วันพระ homage)
+        2. legality: account.yaml ให้ C2 ใช้ media [M11, M1] เท่านั้น แต่ Hero ใบนี้เป็น M2 carousel
+      Sin ตัดสินตอน expand: (ก) ย้ายเป็น C1 x Historical x M2 (art pillar รับ M2 + deity homage ได้)
+      (ข) ทำเป็น C2 x Cosmic x M11 แล้วยก homage ไปโพสต์แยก หรือ (ค) แก้ account.yaml ให้ C2 ใช้ M2 ได้
+      แล้ว relax oracle-theme rule เฉพาะ Hero. ห้าม silent-fix ในไฟล์นี้ — ต้นฉบับพูดชัด.
+      Sacred imagery — respectful homage, เฝ้า reaction 24 ชม.แรก.
+    full_spec: false
+
+  - post_id: L4-D30
+    day: 30
+    week: 4
+    content_pillar: C2
+    theme: Cosmic
+    media: M11
+    funnel_stage: Hub
+    jtbd: "ช่วยทบทวนสัปดาห์ + ตั้งต้นใหม่"
+    hook_type: milestone
+    concept: 'month-close "แสงของเดือนนี้" — recap + โหวตอยากเห็นอะไรเดือนหน้า'
+    hook: "30 วันแรกจบแล้ว — เดือนหน้าอยากให้ มูมีแสง พาไปทางไหน? 🌌"
+    caption: ""
+    ai_visual: true
+    homage_watch: false
+    image: null
+    full_spec: false
