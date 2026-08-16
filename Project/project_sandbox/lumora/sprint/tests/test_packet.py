@@ -197,6 +197,30 @@ def test_approve_refuses_when_llm_qa_required_but_skipped(tmp_path, account, eng
         approve_packet(packet, out, engine)
 
 
+def test_approve_refuses_when_llm_qa_required_but_errored(tmp_path, account, engine):
+    """The gate must fail *closed*: a QA call that went out and failed is not a passing verdict."""
+    from lumora_sprint.compliance import RULE_LLM_QA_ERROR
+    from lumora_sprint.models import ComplianceFinding, ComplianceReport
+
+    out = tmp_path / "out"
+    engine.compliance.require_llm_qa_before_approve = True
+    spec = make_spec()
+    errored = ComplianceReport(
+        ok=True,
+        findings=[
+            ComplianceFinding(
+                rule=RULE_LLM_QA_ERROR, severity="warn", detail="rate limited", source="llm"
+            )
+        ],
+    )
+    packet = build_packet(spec, account, engine, [], errored)
+    write_packet(packet, out)
+
+    assert packet.status is PacketStatus.draft          # not blocked — the finding is only a warn
+    with pytest.raises(PacketRefused, match="require_llm_qa_before_approve"):
+        approve_packet(packet, out, engine)
+
+
 def test_approve_then_publish(tmp_path, account, engine):
     out = tmp_path / "out"
     spec = make_spec()

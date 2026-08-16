@@ -2,15 +2,16 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import UTC, datetime, timedelta
+from datetime import date, timedelta
 
 import pytest
 
 from lumora_sprint import db
 from lumora_sprint.models import HOOK_TYPES, LogRow, MetricsUpdate, PacketStatus
 
-# UTC, to match SQLite's date('now') used by the review-window queries.
-TODAY = datetime.now(UTC).date()
+# Local calendar day: posted_at is written from Python's date.today() (cli.py) and the review-window
+# queries now cut on the same clock, instead of SQLite's UTC date('now').
+TODAY = date.today()  # noqa: DTZ011
 
 
 @pytest.fixture()
@@ -287,6 +288,55 @@ def test_pillar_hook_rollup(week):
     assert c1["n"] == 2 and c1["avg_views"] == pytest.approx(3100)  # (1200 + 5000) / 2
     assert c1["total_gmv"] == pytest.approx(50)
     assert [r["content_pillar"] for r in rollup] == ["C2", "C1"]    # ordered by avg_views DESC
+
+
+def test_review_windows_cut_on_the_local_day_not_utc(week):
+    """The oldest day in a 7-day window must survive whatever the machine's UTC offset is.
+
+    `posted_at` is a local calendar day; SQLite's date('now') is UTC. With a UTC cutoff the window
+    silently widens or — in a negative-offset zone — genuinely drops the oldest day's posts.
+    """
+    edge = TODAY - timedelta(days=7)
+    db.insert_log(week, _row("L1-D07", day_offset=7))          # exactly on the boundary
+    db.update_metrics(week, MetricsUpdate(post_id="L1-D07", views_7d=10))
+
+    ids = {r["post_id"] for r in db.top_performers(week, days=7, limit=10)}
+    assert "L1-D07" in ids, "a post dated exactly `days` ago is inside the window"
+    assert "L0-D00" not in ids                                  # 30 days old, still outside
+
+    # an explicit `since` wins over `days`, so review.py's printed window and the SQL agree
+    only_recent = db.top_performers(week, days=7, limit=10, since=TODAY - timedelta(days=2))
+    assert {r["post_id"] for r in only_recent} == {"L1-D01", "L1-D02"}
+    assert edge.isoformat() < TODAY.isoformat()
+
+
+def test_earliest_posted_at(conn):
+    assert db.earliest_posted_at(conn) is None
+    db.insert_log(conn, _row("L1-D02", day_offset=2))
+    db.insert_log(conn, _row("L1-D09", day_offset=9))
+    assert db.earliest_posted_at(conn) == (TODAY - timedelta(days=9)).isoformat()
+
+
+def test_init_db_refreshes_a_stale_v_post_scores_view(tmp_path):
+    """CREATE VIEW IF NOT EXISTS never replaces — a stale view must be dropped, not kept forever.
+
+    `_ensure_columns` upgrades an older post_log in place, but a view left over from an earlier
+    schema would survive untouched and feed top_performers / pillar_hook_rollup columns that no
+    longer exist — an OperationalError at review time instead of an upgrade.
+    """
+    p = tmp_path / "stale.db"
+    c = db.init_db(p)
+    c.executescript(
+        "DROP VIEW v_post_scores;"
+        "CREATE VIEW v_post_scores AS SELECT post_id, posted_at FROM post_log;"   # a past schema
+    )
+    c.commit()
+    c.close()
+
+    c = db.init_db(p)                                   # re-init must rebuild it
+    cols = {d[0] for d in c.execute("SELECT * FROM v_post_scores").description}
+    assert {"save_rate", "follow_rate", "tail_multiple", "hook_type"} <= cols
+    c.close()
 
 
 def test_gate_progress(week):

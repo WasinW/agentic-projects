@@ -13,6 +13,7 @@ today so day/week math is deterministic.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import shutil
 import sqlite3
@@ -211,7 +212,7 @@ def test_there_is_no_publish_command() -> None:
     """ADR-0001 rule 5 as a test: the CLI must never grow a publisher or a scheduler."""
     commands = set(HANDLERS)
     assert commands == {
-        "init", "plan", "generate", "packet", "approve",
+        "init", "plan", "generate", "packet", "approve", "caption",
         "log", "metrics", "review", "status", "next", "run",
     }
     assert not commands & {"publish", "post", "schedule", "upload", "cron"}
@@ -232,6 +233,19 @@ def test_db_override(sandbox: Path) -> None:
     assert main(["--config-dir", str(sandbox / "config"), "--db", str(alt), "init"]) == EXIT_OK
     assert alt.is_file()
     assert not (sandbox / "lumora_sprint.db").exists()
+
+
+def test_db_override_with_a_relative_path_resolves_against_cwd(
+    sandbox: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A flag is a path the user typed in their shell — not one of engine.yaml's sprint-root paths."""
+    here = tmp_path / "elsewhere"
+    here.mkdir()
+    monkeypatch.chdir(here)
+
+    assert main(["--config-dir", str(sandbox / "config"), "--db", "./scratch.db", "init"]) == EXIT_OK
+    assert (here / "scratch.db").is_file()
+    assert not (sandbox / "scratch.db").exists()
 
 
 def test_plan_requires_a_target(sandbox: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -305,6 +319,72 @@ def test_generate_skip_keeps_approval_but_force_invalidates_it(
     assert db_rows(sandbox, "SELECT status FROM packets WHERE post_id='L1-D01'") == [
         {"status": PacketStatus.generated.value}
     ]
+
+
+def test_fatigue_history_comes_from_the_plan_not_post_log(sandbox: Path) -> None:
+    """`fatigue_check` is positional: recent[0] must be the post right before spec, published or not.
+
+    Feeding it post_log (published posts only) made the gate a no-op on a fresh sprint and, once a
+    few posts were logged, a *wrong* comparison — planning day 5 while only days 1-2 were logged
+    compared day 5's combo against day 2's.
+    """
+    from lumora_sprint.batch import find_post
+    from lumora_sprint.cli import _load_ctx, _recent_combos
+
+    args = argparse.Namespace(config_dir=str(sandbox / "config"), db=None)
+    ctx = _load_ctx(args)
+    try:
+        spec5 = find_post(ctx.batches(), 5)
+        assert _recent_combos(ctx, spec5, 3) == [                # days 4, 3, 2 — newest first
+            ("C9", "Contemporary", "M1"),
+            ("C2", "Cosmic", "M1"),
+            ("C1", "Future-tech", "M1"),
+        ]
+        assert _recent_combos(ctx, find_post(ctx.batches(), 1), 3) == []   # nothing precedes day 1
+    finally:
+        ctx.close()
+
+
+def test_fatigue_warns_on_a_repeat_before_anything_is_published(
+    sandbox: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """End to end: a batch that repeats a non-exempt C+M must trip the gate with an empty post_log."""
+    (sandbox / "batch" / "2026-07-w5.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "batch_id": "2026-07-w5",
+                "account_handle": "@มูมีแสง",
+                "posts": [
+                    {"post_id": f"L5-D{d}", "day": d, "week": 5, "content_pillar": "C1",
+                     "theme": "Future-tech", "media": "M1", "hook_type": "statement",
+                     "caption": "x", "hashtags": ["#x"], "ai_visual": False, "full_spec": True}
+                    for d in (31, 32)
+                ],
+            },
+            allow_unicode=True,
+        ),
+        encoding="utf-8",
+    )
+    assert run(sandbox, "init") == EXIT_OK
+    capsys.readouterr()
+    assert db_rows(sandbox, "SELECT * FROM post_log") == []       # the old blind spot
+
+    assert run(sandbox, "plan", "--day", "32") == EXIT_OK
+    out = capsys.readouterr().out
+    assert "⚠️" in out
+    assert "same C+M as the previous post (C1+M1)" in out
+    assert "C1 x Future-tech x M1 already used" in out
+
+
+def test_fatigue_gate_is_exempt_for_the_oracle_anchor(
+    sandbox: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """C2 is in engine.yaml's exempt_pillars — a daily ritual in a fixed look is the point.
+
+    Day 5 repeats day 1's C2×Cosmic×M11 exactly and must still pass.
+    """
+    assert run(sandbox, "plan", "--day", "5") == EXIT_OK
+    assert "✅ ไม่ซ้ำ" in capsys.readouterr().out
 
 
 def test_packet_blocked_by_banned_phrase_exits_2(

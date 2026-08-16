@@ -317,8 +317,23 @@ def test_status_next_action_approve_then_generate(conn, account, engine):
 
 def test_status_next_action_generate_today(conn, account, engine):
     _mark_reviewed(engine, 1)
-    d = status_summary(conn, account, engine, set(), TODAY)
+    d = status_summary(conn, account, engine, set(), TODAY, today_post_id="L1-D07", batch_loaded=True)
     assert d["next_action"] == "generate day 7 (L1-D07)"
+
+
+def test_status_never_invents_todays_post_id(conn, account, engine):
+    """Without a batch there is nothing to generate — the id is the caller's to supply, not ours."""
+    _mark_reviewed(engine, 1)
+    d = status_summary(conn, account, engine, set(), TODAY)
+    assert not any("generate day" in a for a in d["pending_actions"])
+    assert d["today_post_id"] is None
+
+
+def test_status_reports_an_exhausted_batch_instead_of_a_phantom_post(conn, account, engine):
+    """A batch was loaded but has no post for today: say the batch ran out, don't name a fake id."""
+    _mark_reviewed(engine, 1)
+    d = status_summary(conn, account, engine, set(), TODAY, batch_loaded=True)
+    assert "batch หมดแล้ว" in " ".join(d["pending_actions"])
 
 
 def test_status_next_action_7d_metrics(conn, account, engine):
@@ -390,6 +405,17 @@ def test_render_status_is_one_screen(conn3, account, engine):
     assert "ON TRACK" in txt
     assert "→ NEXT: update 24h metrics for L1-D03" in txt
     assert txt.count("\n") <= 8
+
+
+def test_render_status_does_not_contradict_itself_on_overdue_reviews(conn, engine):
+    """With W1-W4 all overdue the old line read 'day 35 (W5, อีก 6 วัน) — DUE NOW (W1)'."""
+    acc = load_account().model_copy(update={"sprint_start": (TODAY - timedelta(days=28)).isoformat()})
+    d = status_summary(conn, acc, engine, set(), TODAY)
+    assert d["reviews_due"] == [7, 14, 21, 28]
+
+    line = next(ln for ln in render_status(d).splitlines() if ln.startswith("next review:"))
+    assert line == "next review: DUE NOW — W1..W4 (4 ค้าง)"
+    assert "อีก" not in line                                   # no extrapolated future date
 
 
 def test_render_status_empty_db_shows_not_measured(conn, account, engine):

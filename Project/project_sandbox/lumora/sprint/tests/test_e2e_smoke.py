@@ -5,9 +5,9 @@ yet: the multi-day loop (two independent ``post_log`` rows + the derived ``v_pos
 the packet folder as an actual *artefact* (a decodable 1080x1920 PNG, a paste-ready ``caption.txt``),
 and an architectural guard that the only two outbound adapters stay where ADR-0001 put them.
 
-The second half is the defect ledger. Each ``xfail(strict=True)`` test states the behaviour the
-loop *should* have; it fails today. When someone fixes the bug the test XPASSes, which strict mode
-reports as a failure — that is the signal to delete the marker, not to relax it.
+The second half is the defect ledger: one test per bug found in review, each stating the behaviour
+the loop must have. They were written as ``xfail(strict=True)`` while the bugs were live; the
+markers came off when the fixes landed, and these are now ordinary regression tests.
 
 Sandboxing follows test_cli.py: ``config/`` + ``batch/`` are copied under ``tmp_path`` and
 ``engine.yaml`` is rewritten to ``generator.provider: stub`` + ``llm.enabled: false``, so no test can
@@ -261,14 +261,9 @@ def test_no_publisher_verbs_anywhere_in_the_package() -> None:
     assert hits == []
 
 
-# ── defect ledger (each of these fails today — see the docstrings) ─────────
+# ── defect ledger (regressions for the bugs found in review) ───────────────
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECT: cli.cmd_packet._write_state overwrites a `published` packet with `draft`. "
-    "cmd_plan guards against walking backwards; cmd_packet does not.",
-)
 def test_packet_must_not_walk_a_published_packet_backwards(sandbox: Path) -> None:
     """Re-running the compliance gate on a live post must not un-publish it.
 
@@ -286,11 +281,6 @@ def test_packet_must_not_walk_a_published_packet_backwards(sandbox: Path) -> Non
     ]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECT: cli.cmd_generate --force resets a `published` packet to `generated` and clears "
-    "approved_at, while post_log still says the post is live.",
-)
 def test_force_regenerate_must_not_unpublish_a_live_post(sandbox: Path) -> None:
     """New pixels invalidate an *approval*; they cannot un-happen a post Sin already uploaded."""
     publish(sandbox, 1, "L1-D01", URL1)
@@ -303,11 +293,6 @@ def test_force_regenerate_must_not_unpublish_a_live_post(sandbox: Path) -> None:
     ]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECT: packet.build_packet always constructs caption_final='' and cli._write_state "
-    "never carries the previous value forward, so an accepted rewording is destroyed.",
-)
 def test_packet_preserves_an_accepted_caption_final(sandbox: Path) -> None:
     """checklist.md tells Sin to consider the QA's suggested caption; accepting one must stick."""
     assert run(sandbox, "run", "--day", "2", "--no-llm") == EXIT_OK
@@ -323,11 +308,6 @@ def test_packet_preserves_an_accepted_caption_final(sandbox: Path) -> None:
     assert (sandbox / "out" / "L1-D02" / "caption.txt").read_text(encoding="utf-8").startswith(accepted)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECT: status.rank_actions synthesises today's post id as L{week_of_day(day)}-D{day}, "
-    "which is L5-D29 on sprint day 29 while the batch calls that post L4-D29.",
-)
 def test_status_names_the_real_post_id_on_day_29(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """Day 29 carries the batch's single Hero post. status must not invent a post id for it."""
     box = make_sandbox(tmp_path, TODAY - timedelta(days=28))
@@ -341,11 +321,6 @@ def test_status_names_the_real_post_id_on_day_29(tmp_path: Path, capsys: pytest.
     assert "L4-D29" in out
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECT: cli._run_command does `rec.detail = rec.detail or str(exc)`, so a handler that "
-    "already set a progress detail records that instead of why it failed.",
-)
 def test_a_failed_step_records_why_it_failed(sandbox: Path) -> None:
     """The append-only log cannot be backfilled — an ok=False line that does not say why is useless."""
     assert run(sandbox, "plan", "--day", "8") == EXIT_NEEDS_HUMAN
@@ -357,11 +332,6 @@ def test_a_failed_step_records_why_it_failed(sandbox: Path) -> None:
     assert "fatigue" not in event.detail
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="DEFECT: `log` defaults posted_at to today and never checks it against sprint_start, "
-    "while status/review filter post_log on posted_at >= sprint_start — so the row vanishes.",
-)
 def test_a_logged_post_is_never_invisible_to_status(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """A successful `log` must either be counted or be refused — never accepted and then ignored."""
     box = make_sandbox(tmp_path, TODAY + timedelta(days=1))     # sprint starts tomorrow
@@ -371,3 +341,90 @@ def test_a_logged_post_is_never_invisible_to_status(tmp_path: Path, capsys: pyte
 
     assert run(box, "status") == EXIT_OK
     assert "posts logged: 0" not in capsys.readouterr().out
+
+
+def test_review_also_sees_a_post_dated_before_sprint_start(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The same clamp must hold in Step 4 of the weekly ritual, not just on the status screen."""
+    box = make_sandbox(tmp_path, TODAY + timedelta(days=1))
+    publish(box, 1, "L1-D01", URL1)
+    assert run(box, "metrics", "L1-D01", "--views-7d", "4300") == EXIT_OK
+    capsys.readouterr()
+
+    assert run(box, "review", "--week", "1") == EXIT_OK
+    md = (box / "out" / "reviews" / "W1.md").read_text(encoding="utf-8")
+    assert "**โพสต์ที่ log แล้ว:** 1" in md
+    assert "ยังไม่มีโพสต์ให้ตรวจ" not in md              # AI-label check saw the row
+    assert "4,300" in md                                  # and so did the gate
+
+
+def test_packet_reopen_is_the_only_way_back_from_approved(
+    sandbox: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The guard is a default, not a wall: `--reopen` is the explicit, auditable way to downgrade."""
+    assert run(sandbox, "run", "--day", "1", "--no-llm") == EXIT_OK
+    assert run(sandbox, "approve", "L1-D01") == EXIT_OK
+    capsys.readouterr()
+
+    assert run(sandbox, "packet", "--day", "1", "--no-llm") == EXIT_OK
+    assert meta(sandbox, "L1-D01")["status"] == PacketStatus.approved.value
+    assert meta(sandbox, "L1-D01")["approved_at"] is not None   # and the timestamp survived
+
+    assert run(sandbox, "packet", "--day", "1", "--no-llm", "--reopen") == EXIT_OK
+    assert meta(sandbox, "L1-D01")["status"] == PacketStatus.draft.value
+    assert rows(sandbox, "SELECT status FROM packets WHERE post_id='L1-D01'") == [
+        {"status": PacketStatus.draft.value}
+    ]
+
+
+def test_caption_verb_sets_a_final_caption_and_reopens_the_gate(
+    sandbox: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """`caption` is the sanctioned way to accept a rewording — and new text needs a new approval."""
+    assert run(sandbox, "run", "--day", "1", "--no-llm") == EXIT_OK
+    assert run(sandbox, "approve", "L1-D01") == EXIT_OK
+    capsys.readouterr()
+
+    mine = "แคปชั่นที่ Sin เขียนเอง 🌌"
+    assert run(sandbox, "caption", "L1-D01", "--text", mine) == EXIT_OK
+    assert meta(sandbox, "L1-D01")["caption_final"] == mine
+    assert meta(sandbox, "L1-D01")["status"] == PacketStatus.draft.value
+    assert (sandbox / "out" / "L1-D01" / "caption.txt").read_text(encoding="utf-8").startswith(mine)
+
+    # and it survives the next full re-run, which is the whole point
+    assert run(sandbox, "run", "--day", "1", "--no-llm") == EXIT_OK
+    assert meta(sandbox, "L1-D01")["caption_final"] == mine
+
+    assert run(sandbox, "caption", "L1-D01", "--clear") == EXIT_OK
+    assert meta(sandbox, "L1-D01")["caption_final"] == ""
+
+
+def test_cost_usd_is_total_spend_across_every_generate_run(sandbox: Path) -> None:
+    """gen and qa halves must be read the same way, or post_log.cost_usd means two things at once."""
+    assert run(sandbox, "run", "--day", "1", "--no-llm") == EXIT_OK
+    assert run(sandbox, "generate", "--day", "1", "--force") == EXIT_OK
+    assert run(sandbox, "packet", "--day", "1", "--no-llm") == EXIT_OK
+    assert run(sandbox, "approve", "L1-D01") == EXIT_OK
+    assert run(sandbox, "log", "L1-D01", "--url", URL1) == EXIT_OK
+
+    events = read_events(sandbox / "out" / "agent_events.jsonl")
+    total = sum(e.cost_usd for e in events if e.post_id == "L1-D01" and e.step in {"generate", "packet"})
+    logged = rows(sandbox, "SELECT cost_usd FROM post_log WHERE post_id='L1-D01'")[0]["cost_usd"]
+    assert logged == pytest.approx(total)      # every run counted, not just the last generate
+    assert len([e for e in events if e.step == "generate"]) == 2
+
+
+def test_status_says_the_batch_is_finished_instead_of_inventing_day_31(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The batch is 30 days but the gate is 90 — day 31 must not advise generating a phantom post."""
+    box = make_sandbox(tmp_path, TODAY - timedelta(days=30))     # today is sprint day 31
+    assert run(box, "init") == EXIT_OK
+    capsys.readouterr()
+
+    assert run(box, "status") == EXIT_OK
+    out = capsys.readouterr().out
+    assert "day 31/90" in out
+    assert "L5-D31" not in out
+    assert "batch หมดแล้ว" in out

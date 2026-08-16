@@ -269,6 +269,37 @@ def test_llm_qa_block_finding_makes_report_not_ok(account, engine, monkeypatch):
     assert merged.ok is False
 
 
+def test_llm_qa_budget_never_drops_below_the_thinking_floor(account, engine, monkeypatch):
+    """max_tokens caps thinking + text together, so a small configured value truncates the JSON."""
+    from lumora_sprint.compliance import MIN_QA_MAX_TOKENS
+    from lumora_sprint.models import ComplianceReport
+
+    engine.llm.enabled = True
+    engine.llm.max_tokens = 2048                      # the shipped engine.yaml value
+    sent: dict = {}
+    install_fake_client(monkeypatch, _FakeResponse(ComplianceReport(ok=True)), recorder=sent)
+
+    llm_qa(make_spec(), account, engine)
+    assert sent["max_tokens"] == MIN_QA_MAX_TOKENS
+
+    engine.llm.max_tokens = MIN_QA_MAX_TOKENS * 2     # config may raise it, never lower it
+    llm_qa(make_spec(), account, engine)
+    assert sent["max_tokens"] == MIN_QA_MAX_TOKENS * 2
+
+
+def test_llm_qa_names_truncation_instead_of_blaming_structured_output(account, engine, monkeypatch):
+    """A truncated answer must say 'max_tokens', not the generic 'no structured output' finding."""
+    engine.llm.enabled = True
+    install_fake_client(monkeypatch, _FakeResponse(None, stop_reason="max_tokens"))
+
+    report, usage = llm_qa(make_spec(), account, engine)
+
+    assert [f.rule for f in report.findings] == ["llm_qa_error"]
+    assert "max_tokens" in report.findings[0].detail
+    assert usage.ok is False and usage.detail == "truncated: max_tokens"
+    assert usage.cost_usd > 0                          # the call was still paid for
+
+
 def test_llm_qa_refusal_degrades_to_warn(account, engine, monkeypatch):
     engine.llm.enabled = True
     install_fake_client(monkeypatch, _FakeResponse(None, stop_reason="refusal"))
