@@ -98,10 +98,14 @@ def _norm(rows: Any) -> list[dict[str, Any]]:
 
 
 def read_top(conn: sqlite3.Connection, days: int, limit: int, since: str) -> list[dict[str, Any]]:
-    """§5 Step 1 rows: best posts of the window, views_7d desc then save_rate desc."""
+    """§5 Step 1 rows: best posts of the window, views_7d desc then save_rate desc.
+
+    ``since`` is passed through to db.py rather than recomputed there: this module already knows
+    the window start it *prints*, and the two must be the same date.
+    """
     fn = _db_fn("top_performers")
     if fn is not None:
-        return _norm(fn(conn, days, limit))
+        return _norm(fn(conn, days, limit, since))
     return _rows(conn, _SQL_TOP, (since, limit))
 
 
@@ -109,7 +113,7 @@ def read_bottom(conn: sqlite3.Connection, days: int, limit: int, since: str) -> 
     """§5 Step 2 rows: worst *measured* posts (unmeasured ones are excluded, not ranked last)."""
     fn = _db_fn("bottom_performers")
     if fn is not None:
-        rows = _norm(fn(conn, days, max(limit, 5)))
+        rows = _norm(fn(conn, days, max(limit, 5), since))
     else:
         rows = _rows(conn, _SQL_BOTTOM, (since, max(limit, 5)))
     measured = [r for r in rows if r.get("views_7d") is not None]
@@ -120,7 +124,7 @@ def read_rollup(conn: sqlite3.Connection, days: int, since: str) -> list[dict[st
     """§5 Step 3 rows: pillar x hook_type rollup over the lookback window."""
     fn = _db_fn("pillar_hook_rollup")
     if fn is not None:
-        return _norm(fn(conn, days))
+        return _norm(fn(conn, days, since))
     return _rows(conn, _SQL_ROLLUP, (since,))
 
 
@@ -151,6 +155,25 @@ def measured_gate(gp: dict[str, Any], posts: list[dict[str, Any]]) -> tuple[int 
     if not any(r.get("follows_delta") is not None for r in posts):
         followers = None
     return best, followers
+
+
+def sprint_window_start(conn: sqlite3.Connection, sprint_start: str) -> str:
+    """Where the sprint's own reads open: ``sprint_start``, or earlier if a logged post predates it.
+
+    ``log`` accepts a ``--posted-at`` before the configured start (Sin began early, or back-filled a
+    row), and every reader filters on ``posted_at >= sprint_start``. A row the tool *accepted* must
+    never be silently invisible, so the window is clamped to the earliest logged post when that is
+    earlier than the configured start. Nothing is invented: with an empty log the start is unchanged.
+    """
+    fn = _db_fn("earliest_posted_at")
+    if fn is not None:
+        first = fn(conn)
+    else:
+        rows = _rows(conn, "SELECT MIN(posted_at) AS first_posted FROM post_log", ())
+        first = rows[0]["first_posted"] if rows else None
+    if not first:
+        return sprint_start
+    return min(str(first)[:10], sprint_start)
 
 
 def load_log(conn: sqlite3.Connection, since: str | None = None) -> list[dict[str, Any]]:
@@ -349,8 +372,9 @@ def weekly_review(
     top = read_top(conn, win_days, 3, since_7d)
     bottom = read_bottom(conn, win_days, 2, since_7d)
     rollup = read_rollup(conn, look_days, since_look)
-    gp = read_gate_progress(conn, account.sprint_start)
-    all_posts = load_log(conn, account.sprint_start)
+    sprint_since = sprint_window_start(conn, account.sprint_start)
+    gp = read_gate_progress(conn, sprint_since)
+    all_posts = load_log(conn, sprint_since)
 
     medians = _medians_of(window)
     unmeasured = [r["post_id"] for r in window if r.get("views_7d") is None]

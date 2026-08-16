@@ -14,7 +14,7 @@ Rules honoured here:
 from __future__ import annotations
 
 import sqlite3
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -96,8 +96,12 @@ CREATE TABLE IF NOT EXISTS packets (
 
 CREATE INDEX IF NOT EXISTS idx_packets_status ON packets(brand_id, status);
 
--- derived engagement view (save-rate = strongest signal for oracle/wallpaper)
-CREATE VIEW IF NOT EXISTS v_post_scores AS
+-- derived engagement view (save-rate = strongest signal for oracle/wallpaper).
+-- Dropped first: CREATE VIEW IF NOT EXISTS never *replaces*, so an older db would keep a stale
+-- definition forever and fail at review time with a column error instead of upgrading. The view is
+-- derived from post_log, so dropping it costs nothing.
+DROP VIEW IF EXISTS v_post_scores;
+CREATE VIEW v_post_scores AS
 SELECT
   post_id, posted_at, content_pillar, theme, media, hook_type, funnel_stage,
   views_7d, saves, follows_delta, gmv,
@@ -180,9 +184,18 @@ def _iso(d: str | date) -> str:
     return d.isoformat() if isinstance(d, date) else str(d)
 
 
-def _window(days: int) -> str:
-    """SQLite date modifier for a lookback window, e.g. 7 -> '-7 day'."""
-    return f"-{int(days)} day"
+def _since(days: int, since: str | date | None = None) -> str:
+    """Window start as an ISO date: the caller's explicit ``since``, else ``days`` back from today.
+
+    Deliberately *not* SQLite's ``date('now', '-N day')``: that is UTC, while ``posted_at`` is
+    written from Python's local calendar day (cli.py). In a positive-offset zone the SQLite date
+    lags by a day for part of the morning and the window silently widens; in a negative-offset zone
+    it leads and genuinely drops the oldest day's posts. Compute the cutoff in the same clock the
+    rows were written in.
+    """
+    if since is not None:
+        return _iso(since)
+    return (date.today() - timedelta(days=max(int(days), 0))).isoformat()  # noqa: DTZ011
 
 
 # ── writes ─────────────────────────────────────────────────────────────────
@@ -285,6 +298,17 @@ def get_packet_status(conn: sqlite3.Connection, post_id: str) -> dict[str, Any] 
     return _one(conn.execute("SELECT * FROM packets WHERE post_id = ?", (post_id,)))
 
 
+def earliest_posted_at(conn: sqlite3.Connection) -> str | None:
+    """The oldest ``posted_at`` in post_log as 'YYYY-MM-DD', or None when nothing is logged.
+
+    Lets the readers open their window early enough to see a post dated before ``sprint_start`` —
+    a row the tool accepted must never be invisible to ``status``/``review``.
+    """
+    row = _one(conn.execute("SELECT MIN(posted_at) AS first_posted FROM post_log"))
+    first = row["first_posted"] if row else None
+    return str(first)[:10] if first else None
+
+
 def recent_combos(conn: sqlite3.Connection, n: int) -> list[tuple[str, str, str]]:
     """The (content_pillar, theme, media) of the last `n` published posts, newest first.
 
@@ -302,19 +326,23 @@ def recent_combos(conn: sqlite3.Connection, n: int) -> list[tuple[str, str, str]
 # ── weekly review ritual (02-post-log-template §5) ─────────────────────────
 
 
-def top_performers(conn: sqlite3.Connection, days: int = 7, limit: int = 3) -> list[dict[str, Any]]:
-    """Step 1 — what to double down on next week."""
+def top_performers(
+    conn: sqlite3.Connection, days: int = 7, limit: int = 3, since: str | date | None = None
+) -> list[dict[str, Any]]:
+    """Step 1 — what to double down on next week. ``since`` overrides the ``days`` lookback."""
     return _rows(
         conn.execute(
             "SELECT post_id, content_pillar, theme, media, hook_type, views_7d, save_rate, "
-            "follow_rate, gmv FROM v_post_scores WHERE posted_at >= date('now', ?) "
+            "follow_rate, gmv FROM v_post_scores WHERE posted_at >= ? "
             "ORDER BY views_7d DESC, save_rate DESC LIMIT ?",
-            (_window(days), int(limit)),
+            (_since(days, since), int(limit)),
         )
     )
 
 
-def bottom_performers(conn: sqlite3.Connection, days: int = 7, limit: int = 2) -> list[dict[str, Any]]:
+def bottom_performers(
+    conn: sqlite3.Connection, days: int = 7, limit: int = 2, since: str | date | None = None
+) -> list[dict[str, Any]]:
     """Step 2 — what to diagnose (weak hook? aesthetic? fatigued combo?).
 
     Two deliberate deviations from the template SQL: `views_24h` is joined in from post_log (the
@@ -326,22 +354,24 @@ def bottom_performers(conn: sqlite3.Connection, days: int = 7, limit: int = 2) -
             "SELECT s.post_id, s.content_pillar, s.theme, s.media, s.hook_type, "
             "p.views_24h, s.views_7d, s.save_rate "
             "FROM v_post_scores s JOIN post_log p ON p.post_id = s.post_id "
-            "WHERE s.posted_at >= date('now', ?) "
+            "WHERE s.posted_at >= ? "
             "ORDER BY (s.views_7d IS NULL), s.views_7d ASC LIMIT ?",
-            (_window(days), int(limit)),
+            (_since(days, since), int(limit)),
         )
     )
 
 
-def pillar_hook_rollup(conn: sqlite3.Connection, days: int = 28) -> list[dict[str, Any]]:
+def pillar_hook_rollup(
+    conn: sqlite3.Connection, days: int = 28, since: str | date | None = None
+) -> list[dict[str, Any]]:
     """Step 3 — which pillar x hook pays, over the review lookback window."""
     return _rows(
         conn.execute(
             "SELECT content_pillar, hook_type, COUNT(*) n, ROUND(AVG(views_7d)) avg_views, "
             "ROUND(AVG(save_rate), 4) avg_save_rate, ROUND(SUM(gmv)) total_gmv "
-            "FROM v_post_scores WHERE posted_at >= date('now', ?) "
+            "FROM v_post_scores WHERE posted_at >= ? "
             "GROUP BY content_pillar, hook_type ORDER BY avg_views DESC",
-            (_window(days),),
+            (_since(days, since),),
         )
     )
 

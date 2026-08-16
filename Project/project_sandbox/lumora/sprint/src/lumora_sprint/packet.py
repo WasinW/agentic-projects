@@ -19,7 +19,7 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
-from .compliance import RULE_LLM_QA_SKIPPED, blocking_findings, has_rule
+from .compliance import RULE_LLM_QA_ERROR, RULE_LLM_QA_SKIPPED, blocking_findings, has_rule
 from .config import AccountConfig, EngineConfig
 from .models import ComplianceReport, GeneratedImage, Packet, PacketStatus, PostSpec
 
@@ -55,8 +55,10 @@ def build_packet(
 ) -> Packet:
     """Assemble the packet in memory. Status is ``blocked`` iff a block finding survives the engine flag.
 
-    ``caption_final`` is left empty on purpose: it only gets filled when Sin accepts a suggested
-    rewording, and every renderer falls back to ``spec.caption``.
+    ``caption_final`` starts empty: it only gets filled when Sin accepts a rewording (``lumora
+    caption``), and every renderer falls back to ``spec.caption``. This function builds from the
+    spec alone, so a caller re-running it over an existing packet must carry the accepted value
+    forward itself — ``cli._write_state`` does.
     """
     blocks = blocking_findings(report)
     if not engine.compliance.block_on_banned_phrase:
@@ -207,7 +209,11 @@ def approve_packet(packet: Packet, out_dir: str | Path, engine: EngineConfig) ->
     """The human gate. Sin approves; the tool only records it. Raises :class:`PacketRefused` if:
 
     * the packet is ``blocked`` or still carries a block finding — edit the caption and re-run, or
-    * ``engine.compliance.require_llm_qa_before_approve`` is on and the LLM QA pass never ran.
+    * ``engine.compliance.require_llm_qa_before_approve`` is on and no LLM verdict exists.
+
+    "No verdict" covers both ways the pass can come back empty: ``llm_qa_skipped`` (never called)
+    and ``llm_qa_error`` (called and failed — rate limit, 5xx, refusal). A flag whose whole job is
+    "refuse to approve without QA" must not fail open in exactly the case where QA is broken.
     """
     if packet.status is PacketStatus.blocked:
         raise PacketRefused(
@@ -218,11 +224,16 @@ def approve_packet(packet: Packet, out_dir: str | Path, engine: EngineConfig) ->
         rules = ", ".join(f.rule for f in blocks)
         raise PacketRefused(f"{packet.post_id}: ยังมี block finding ({rules}) — approve ไม่ได้")
 
-    qa_missing = packet.compliance is None or has_rule(packet.compliance, RULE_LLM_QA_SKIPPED)
+    qa_missing = (
+        packet.compliance is None
+        or has_rule(packet.compliance, RULE_LLM_QA_SKIPPED)
+        or has_rule(packet.compliance, RULE_LLM_QA_ERROR)
+    )
     if engine.compliance.require_llm_qa_before_approve and qa_missing:
         raise PacketRefused(
-            f"{packet.post_id}: require_llm_qa_before_approve=true แต่ LLM QA ยังไม่ได้รัน "
-            "— ตั้ง ANTHROPIC credentials + engine.llm.enabled=true แล้วรัน qa ใหม่"
+            f"{packet.post_id}: require_llm_qa_before_approve=true แต่ยังไม่มีผล LLM QA "
+            "(ข้ามไป หรือเรียกแล้วล้มเหลว) — ตั้ง ANTHROPIC credentials + engine.llm.enabled=true "
+            "แล้วรัน packet ใหม่"
         )
 
     packet.status = PacketStatus.approved

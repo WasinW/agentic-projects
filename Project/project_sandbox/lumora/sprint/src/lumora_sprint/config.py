@@ -89,7 +89,7 @@ class AccountConfig(BaseModel):
     affiliate_by_pillar: dict[str, str] = Field(default_factory=dict)
 
     @model_validator(mode="after")
-    def _sanity(self) -> "AccountConfig":
+    def _sanity(self) -> AccountConfig:
         if not (2 <= len(self.active_pillars) <= 4):
             raise ValueError("active_pillars must have 2-4 entries (framework: pick 2-4 pillars per account)")
         if self.oracle_theme not in self.active_themes:

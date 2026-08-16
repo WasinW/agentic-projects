@@ -22,11 +22,15 @@ from .review import (
     read_gate_progress,
     review_path,
     sprint_day,
+    sprint_window_start,
     week_of_day,
 )
 
 DASH = "—"
 STATUS_ORDER: tuple[str, ...] = tuple(s.value for s in PacketStatus)
+
+#: What to say once the sprint runs past the last planned post (same wording as `lumora next`).
+BATCH_EXHAUSTED = "batch หมดแล้ว — เขียน batch ใหม่ด้วย /lumora-content-batch"
 
 
 # ── packet states ──────────────────────────────────────────────────────────
@@ -117,11 +121,19 @@ def rank_actions(
     logged_ids: set[str],
     due: list[int],
     today: date,
+    today_post_id: str | None = None,
+    batch_loaded: bool = False,
 ) -> list[str]:
     """All pending actions, most urgent first. Order = finish what is in flight before starting new.
 
     review (date-bound ritual) > blocked (pipeline stall) > log url (a row must exist before metrics)
     > 24h metrics (the number disappears if not caught) > approve > generate today > 7d metrics.
+
+    ``today_post_id`` is the id the *batch* gives day ``day``; this module never synthesises one.
+    ``L{week_of_day(day)}-D{day:02d}`` looks right and is wrong wherever the batch disagrees — the
+    30-day plan labels days 29-30 ``L4-*`` while ``week_of_day`` says week 5 — and past the end of
+    the batch it names a post that exists nowhere. ``batch_loaded`` says a batch *was* read, so a
+    missing id means "batch is finished", not "caller didn't tell us".
     """
     actions: list[str] = []
     by_status: dict[str, list[str]] = {s: [] for s in STATUS_ORDER}
@@ -151,10 +163,11 @@ def rank_actions(
     if drafts:
         actions.append(f"approve {drafts[0]}{_more(drafts)}")
 
-    if day >= 1:
-        today_id = f"L{week_of_day(day)}-D{day:02d}"
-        if packets.get(today_id, PacketStatus.planned.value) == PacketStatus.planned.value:
-            actions.append(f"generate day {day} ({today_id})")
+    if day >= 1 and today_post_id:
+        if packets.get(today_post_id, PacketStatus.planned.value) == PacketStatus.planned.value:
+            actions.append(f"generate day {day} ({today_post_id})")
+    elif day >= 1 and batch_loaded:
+        actions.append(BATCH_EXHAUSTED)
 
     week_ago = (today - timedelta(days=7)).isoformat()
     need_7d = sorted(
@@ -176,21 +189,26 @@ def status_summary(
     engine: EngineConfig,
     batches_published_ids: set[str],
     today: date,
+    *,
+    today_post_id: str | None = None,
+    batch_loaded: bool = False,
 ) -> dict[str, Any]:
     """Everything the CLI shows in one deterministic, JSON-serialisable dict.
 
     ``batches_published_ids`` = post_ids the caller already knows are live (e.g. from the batch/CLI);
-    unioned with packets whose status is ``published``.
+    unioned with packets whose status is ``published``. ``today_post_id`` / ``batch_loaded`` are the
+    caller's view of the batch — see :func:`rank_actions`.
     """
     day = sprint_day(account, today)
-    posts = load_log(conn, account.sprint_start)
+    since = sprint_window_start(conn, account.sprint_start)
+    posts = load_log(conn, since)
     logged_ids = {r["post_id"] for r in posts}
     packets, packets_source = read_packets(conn, engine)
     published_ids = set(batches_published_ids or set()) | {
         pid for pid, st in packets.items() if st == PacketStatus.published.value
     }
 
-    gp = read_gate_progress(conn, account.sprint_start)
+    gp = read_gate_progress(conn, since)
     best_views, followers = measured_gate(gp, posts)
     gate = gate_math(account.gate, day, best_views, followers)
 
@@ -209,6 +227,7 @@ def status_summary(
     actions = rank_actions(
         day=day, posts=posts, packets=packets, published_ids=published_ids,
         logged_ids=logged_ids, due=due, today=today,
+        today_post_id=today_post_id, batch_loaded=batch_loaded,
     )
     if day < 1:
         actions = [f"sprint starts {account.sprint_start} — เตรียม batch ให้พร้อม"]
@@ -220,6 +239,8 @@ def status_summary(
         "brand_id": account.brand_id,
         "today": today.isoformat(),
         "sprint_start": account.sprint_start,
+        "log_window_start": since,          # == sprint_start unless a post was logged before it
+        "today_post_id": today_post_id,
         "day": day,
         "days_total": gate["days"],
         "days_left": gate["days_left"],
@@ -270,10 +291,16 @@ def render_status(d: dict[str, Any]) -> str:
     counts = " · ".join(f"{k} {v}" for k, v in d["packets"].items())
     lines.append(f"packets: {counts}  [source: {d['packets_source']}]")
 
-    due = f" — DUE NOW (W{week_of_day(d['reviews_due'][0])})" if d["reviews_due"] else ""
-    lines.append(
-        f"next review: day {d['next_review_day']} (W{d['next_review_week']}, อีก {d['next_review_in_days']} วัน){due}"
-    )
+    if d["reviews_due"]:
+        # never print an extrapolated future date next to "DUE NOW": with four reviews overdue the
+        # old line read "next review: day 35 (W5, อีก 6 วัน) — DUE NOW (W1)", which is a contradiction.
+        weeks = sorted({week_of_day(x) for x in d["reviews_due"]})
+        span = f"W{weeks[0]}" if len(weeks) == 1 else f"W{weeks[0]}..W{weeks[-1]}"
+        lines.append(f"next review: DUE NOW — {span} ({len(d['reviews_due'])} ค้าง)")
+    else:
+        lines.append(
+            f"next review: day {d['next_review_day']} (W{d['next_review_week']}, อีก {d['next_review_in_days']} วัน)"
+        )
     if not d.get("ai_label_ok", True):
         lines.append("⚠️  AI label ไม่ครบทุกโพสต์ — เปิด toggle ก่อนโดนระบบจับ")
 

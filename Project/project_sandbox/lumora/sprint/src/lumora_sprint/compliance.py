@@ -59,6 +59,13 @@ RULE_AI_VISUAL_NO_IMAGE = "ai_visual_no_image"
 RULE_LLM_QA_SKIPPED = "llm_qa_skipped"
 RULE_LLM_QA_ERROR = "llm_qa_error"
 
+#: Floor applied to ``engine.llm.max_tokens`` for the QA call (engine.yaml may set it higher).
+#: On the configured Claude models adaptive thinking is ON whenever no ``thinking`` field is sent,
+#: and ``max_tokens`` caps thinking + response text *together*. A long Thai caption plus the ~1.5KB
+#: system brief can burn a small budget on thinking and return truncated JSON — a failure that is
+#: only discovered after the call has already been paid for.
+MIN_QA_MAX_TOKENS = 8000
+
 # Predictive markers for R-3.1. Deliberately specific: the channel's own voice says
 # "เราไม่ได้มาทำนาย..." constantly, so a bare 'แน่' would fire on 'ไม่แน่ใจ'. Combined forms
 # ('ได้แน่', 'ปังแน่') carry the guarantee; a negation guard drops "ไม่...ทำนาย" style phrasing.
@@ -370,7 +377,7 @@ def llm_qa(
         client = anthropic.Anthropic()
         response = client.messages.parse(
             model=model,
-            max_tokens=engine.llm.max_tokens,
+            max_tokens=max(int(engine.llm.max_tokens), MIN_QA_MAX_TOKENS),
             system=build_qa_system_prompt(account),
             messages=[{"role": "user", "content": build_qa_user_message(spec)}],
             output_format=ComplianceReport,
@@ -401,9 +408,20 @@ def llm_qa(
         cost_usd=estimate_cost_usd(used_model, in_tok, out_tok),
     )
 
-    if getattr(response, "stop_reason", None) == "refusal":
+    stop_reason = getattr(response, "stop_reason", None)
+    if stop_reason == "refusal":
         report, _ = _errored(used_model, "LLM ปฏิเสธคำขอ (stop_reason=refusal) — ตรวจด้วยตาแทน")
         return report, replace(usage, ok=False, detail="refusal")
+
+    if stop_reason == "max_tokens":
+        # named explicitly: truncation would otherwise surface as the generic "no structured
+        # output" finding below, which points at the wrong fix (the budget, not the model).
+        report, _ = _errored(
+            used_model,
+            f"คำตอบถูกตัดกลางคัน (stop_reason=max_tokens ที่ {out_tok} output tokens) — "
+            "ขึ้น engine.llm.max_tokens แล้วรัน packet ใหม่",
+        )
+        return report, replace(usage, ok=False, detail="truncated: max_tokens")
 
     parsed = getattr(response, "parsed_output", None)
     if parsed is None:
